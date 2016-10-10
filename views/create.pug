@@ -1,9 +1,9 @@
-extends index
+extends layout
 
-block create
+block content
 	div.container-fluid
 		h1.page-header #{title}
-		form(enctype="multipart/form-data", method="POST", action="/")
+		form(enctype="multipart/form-data", method="POST", action="/create")
 			h4 Create a poll
 			h6 Question:
 			input.form-control(type="text", name="poll_q", placeholder="Question", value=" ")

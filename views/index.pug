@@ -5,12 +5,6 @@ block content
 		h1.page-header #{title}
 		form(enctype="multipart/form-data", method="POST", action="/")
 			h4 Sign up / in to create a poll
-			h6 Username:
-			input.form-control(type="text", name="user", placeholder="Username", value=" ")
-			h6 Password:
-			input.form-control(type="text", name="pass", placeholder="Password", value=" ")
-			input.btn.btn-default.margin(type="submit" value="Submit")
+			input.btn.btn-default.margin(type="submit" value="Sign in")
 		h4 output:
 		code #{result}
-		block create
-		block vote

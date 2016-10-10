@@ -1,9 +1,9 @@
-extends index
+extends layout
 
-block vote
+block content
 	div.container-fluid
 		h1.page-header #{title}
-		form(enctype="multipart/form-data", method="POST", action="/")
+		form(enctype="multipart/form-data", method="POST", action="/vote")
 			h4 #{poll_q}
 			label
 				input(type="radio", name=""+ans_a+"", value=""+ans_a+"")

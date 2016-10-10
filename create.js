@@ -14,11 +14,21 @@ var http = require('http');
 var bcrypt = require('bcryptjs');
 dotenv.load();
 
-var uri = process.env.MONGODB_URI;
+//var uri = process.env.MONGODB_URI; //for heroku deploy
+var uri = process.env.DEVDB;
+var COLLECTION_NAME = 'fcc_voters_local'; //for local dev
+//var COLLECTION_NAME = 'fcc_voters'; //for heroku deploy
 
-mongo.connect(uri, function(){
-	console.log('connected to MongoDB');
-})
+mongodb.MongoClient.connect(uri, function (err, database) {
+  if (err) {
+    console.log(err);
+    process.exit(1);
+  }
+
+  // Save database object from the callback for reuse.
+  db = database;
+  console.log("Database connection ready");
+});
 
 // Generic error handler used by all endpoints.
 function handleError(res, reason, message, code) {
@@ -29,8 +39,8 @@ function handleError(res, reason, message, code) {
 
 
 router.post('/', upload.array(), function(req, res){
-	var usern = req.body.user;
-	var passw = req.body.pass;
-	create(res, usern, passw)
+	var poll_q = req.body.poll_q;
+	var ans_a = req.body.ans_a;
+	var ans_b = req.body.ans_b;
 });
 

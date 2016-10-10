@@ -1,7 +1,7 @@
 
 	var dotenv = require('dotenv');
 	dotenv.load();
-	var uri = JSON.stringify(process.env.MONGODB_URI);
+	var uri = JSON.stringify(process.env.DEVDB/*process.env.MONGODB_URI*/);
 	var MongoClient = require("mongodb").MongoClient;
 	var db;
 	module.exports = {

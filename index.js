@@ -7,7 +7,7 @@ var path = require("path");
 var logger = require('morgan');
 var bodyParser = require("body-parser");
 var mongodb = require("mongodb");
-var mongo = require('./mongo_client.js');
+//var mongo = require('./mongo_client.js');
 var url = require('url');
 //var jwt = require('express-jwt');
 var cors = require('cors');
@@ -16,10 +16,25 @@ var http = require('http');
 var upload = multer();
 dotenv.load();
 
-var uri = process.env.MONGODB_URI;
-
-mongo.connect(uri, function(){
+//var uri = process.env.MONGODB_URI;
+var COLLECTION_NAME = 'fcc_voters_local'; //for local dev
+//var COLLECTION_NAME = 'fcc_voters'; //for heroku deploy
+var uri = process.env.DEVDB;
+var db;
+/*mongo.connect(uri, function(database){
+	db = database;
 	console.log('connected to MongoDB');
+});*/
+
+mongodb.MongoClient.connect(uri, function (err, database) {
+  if (err) {
+    console.log(err);
+    process.exit(1);
+  }
+
+  // Save database object from the callback for reuse.
+  db = database;
+  console.log("Database connection ready");
 });
 
 // Generic error handler used by all endpoints.
@@ -28,86 +43,46 @@ function handleError(res, reason, message, code) {
 	res.status(code || 500).json({"error": message});
 }
 
+//console.log(db.collection('fcc_voters_local')[0])
 
 router.post('/', upload.array(), function(req, res){
 	var usern = req.body.user;
 	var passw = req.body.pass;
-	create(res, usern, passw)
+	db.collection(COLLECTION_NAME).findOne({ user: usern }, function (err, nameExists) {
+		if (err) return callback(err);
+//		console.log(nameExists) //logs user
+		var thisUser;
+		if (nameExists) {
+			thisUser = nameExists.user;
+			//return false;
+		} else {			
+			var usr = {
+				user: usern,
+				pass: passw
+			}
+	    	db.collection(COLLECTION_NAME).insertOne(usr, function (err, inserted) {
+	      		if (err) return callback(err);
+	    	});
+			thisUser = usr.user;
+		}
+		console.log(thisUser)
+		res.render('create', {
+			title: 'FCC Voting App',
+			result: 'Hello'+thisUser+'!'
+		});		
+    });
 });
-
-function create (usern, passw, callback) { //signup
-//	var uri = process.env.MONGODB_URI;
-//	mongo.connect(uri, function (db) {
-	    
-
-	 	//var salt = bcrypt.genSaltSync(10);
-		mongo.db().collection('fcc_voters').findOne({ user: usern }, function (err, nameExists) {
-			if (err) return callback(err);
-			if (nameExists) {
-				//return callback(new Error('the user already exists'));
-				login(usern, passw);
-				return false;
-			}// else {			
-				//bcrypt.hashSync(passw, salt, function (err, hash) {
-		        //	if (err) { return callback(err); }
-		        //	passw = bcrypt.hashSync(hash, salt);
-
-					// Store hash in your password DB.				
-					var usr = {
-						user: usern,
-						pass: passw
-					}
-		        	mongo.db().collection('fcc_voters').insertOne(usr, function (err, inserted) {
-		          		if (err) return callback(err);
-		          		callback(null);
-		        	});
-		    	//});
-			//}
-			return user;		
-	    });
-//	});
-}
-
-function login(callback) { //user / pass
-	//mongo.connect(uri, function (db) {
-		var usern = create().usr.user;
-		var passw = create().usr.pass;
-	    mongo.db().collection('fcc_voters').findOne({ user: usern }, function (err, usr) {
-			if (err) return callback(err);
-
-		      if (!user) return callback(new Error('Username not found'));
-				//new WrongUsernameOrPasswordError(email));
-
-		      //bcrypt.compare(passw, usr.pass, function (err, isValid) {
-		        //if (err) {
-				//	callback(err);
-		        //} else if (!isValid) {
-				//	callback(new Error('Wrong username or password'));
-		        //} else {
-		          	callback(null, {
-		            	user: usr.user
-		          	});
-		        //}
-			//});
-	    });
-//	});
-}
 
 
 /* GET home page. */
 router.get('/', function(req, res) {
-	var thisUser = login.user;
-	if (thisUser == undefined) {
+	//var thisUser = login.user;
+	//if (thisUser == undefined) {
 		res.render('index', {
 			title: 'FCC Voting App'
 		});
 		return false;
-	} else {
-		res.render('index', {
-			title: 'FCC Voting App',
-			result: 'Hello'+login.user+'! You can now create a poll.'
-		});		
-	}
+	//}
 });
 
 module.exports = router;
