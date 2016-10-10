@@ -10,6 +10,7 @@ var url = require('url');
 var jwt = require('express-jwt');
 var cors = require('cors');
 var http = require('http');
+var bcrypt = require('bcryptjs');
 
 var pug = require('pug');
 
@@ -26,9 +27,9 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 app.use(urlencodedParser);
 
 app.use('/', require('./index.js'));
-app.use('/users', require('./users.js'));
+//app.use('/users', require('./users.js'));
 //app.use('/history', require('./history.js'));
-app.post('/', require('./search.js'));
+//app.post('/', require('./signup.js'));
 
 var server = app.listen(process.env.PORT || 8080, function(){
 	var port = server.address().port;
