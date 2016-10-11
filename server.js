@@ -1,18 +1,19 @@
 var express = require("express");
+var path = require("path");
 var dotenv = require('dotenv');
 var bodyParser = require("body-parser");
-var mongodb = require("mongodb");
+//var mongodb = require("mongodb");
 var mongoose = require("mongoose");
 var session = require('express-session');
 //var mongo = require('./mongo_client.js');
-var bcrypt = require('bcryptjs');
+var MongoStore = require('connect-mongo')(session);
 
 var pug = require('pug');
 
 var app = express();
 dotenv.load();
 
-mongoose.connect(process.env.DEVDB)
+mongoose.connect(process.env.DEVDB);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
@@ -26,33 +27,24 @@ app.use(session({
   })
 }));
 
-app.use(bodyParser.json());
-var urlencodedParser = bodyParser.urlencoded({ extended: false })
-app.use(urlencodedParser);
-
 // make user ID available in templates
 app.use(function (req, res, next) {
   res.locals.currentUser = req.session.userId;
   next();
 });
 
+app.use(bodyParser.json());
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
+app.use(urlencodedParser);
+
+
 app.use(express.static(__dirname + '/public'));
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
 //routes
-var index = require('./index.js');
-//var login = require('./login.js');
-//var create = require('./create.js');
-//var vote = require('./vote.js');
-
-//app.use(app.router);
+var index = require('./index');
 app.use('/', index);
-//app.use('/login', login);
-//app.use('/create', create);
-//app.post('/', login);
-//app.post('/create', create);
-//app.post('/vote', vote);
 
 
 // catch 404 and forward to error handler

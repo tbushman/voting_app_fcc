@@ -4,7 +4,11 @@ block content
 	div.container-fluid
 		h1.page-header #{title}
 		form(enctype="multipart/form-data", method="POST", action="/")
-			h4 Sign up / in to create a poll
+			h4 Sign in to create a poll
 			input.btn.btn-default.margin(type="submit" value="Sign in")
+
+		form(enctype="multipart/form-data", method="POST", action="/go")
+			h4 Sign up to create a poll
+			input.btn.btn-default.margin(type="submit" value="Sign up")
 		h4 output:
 		code #{result}
