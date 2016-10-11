@@ -36,9 +36,22 @@ function handleError(res, reason, message, code) {
 	res.status(code || 500).json({"error": message});
 }
 //bcrypt
-
-
-router.post('/', upload.array(), function(req, res){
+var user;
+router.get('/create/(.+)/', function(req, res){
+	user = url.parse(req.url).pathname;
+	user = user.replace('create/', '');
+	if (user == '') {
+		res.redirect('/');
+		return false;
+	} else {
+		res.render('create', {
+			title: 'FCC Voting App',
+			user: user,
+			result: 'Hello'+user+'! Create your poll'
+		});		
+	}
+})
+router.post('/create/'+user+'', upload.array(), function(req, res){
 	var poll_q = req.body.poll_q;
 	var ans_a = req.body.ans_a;
 	var ans_b = req.body.ans_b;

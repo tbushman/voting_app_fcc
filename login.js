@@ -45,7 +45,7 @@ function handleError(res, reason, message, code) {
 
 //console.log(db.collection('fcc_voters_local')[0])
 
-router.post('/', upload.array(), function(req, res){
+router.post('/login', upload.array(), function(req, res){
 	var usern = req.body.user;
 	var passw = req.body.pass;
 	db.collection(COLLECTION_NAME).findOne({ user: usern }, function (err, nameExists) {
@@ -67,9 +67,25 @@ router.post('/', upload.array(), function(req, res){
 			thisUser = usr.user;
 		}
 		console.log(thisUser)
-		res.render('create', {
+		return thisUser;
+		//res.redirect('/create/'+thisUser+'')
+		/*res.render('create', {
 			title: 'FCC Voting App',
 			result: 'Hello'+thisUser+'!'
-		});		
+		});	*/	
     });
 });
+
+
+/* GET login page. */
+router.get('/login', function(req, res) {
+	//var thisUser = login.user;
+	//if (thisUser == undefined) {
+		res.render('login', {
+			title: 'FCC Voting App'
+		});
+		//return false;
+	//}
+});
+
+module.exports = router;
