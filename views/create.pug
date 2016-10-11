@@ -3,14 +3,15 @@ extends layout
 block content
 	div.container-fluid
 		h1.page-header #{title}
-		form(enctype="multipart/form-data", method="POST", action="/create/"+user+"")
-			h4 Create a poll
-			h6 Question:
-			input.form-control(type="text", name="poll_q", placeholder="Question", value=" ")
-			h6 Answer A:
-			input.form-control(type="text", name="ans_a", placeholder="Answer A", value=" ")
-			h6 Answer B:
-			input.form-control(type="text", name="ans_b", placeholder="Answer B", value=" ")
-			input.btn.btn-default.margin(type="submit" value="submit")
-		h4 output:
-		code #{result}
+		h4 Hello, #{greet}! Create a poll.
+		form(enctype="multipart/form-data", method="POST", action="/create")
+			div.form-group
+				label(for='poll_q') Question:
+				input.form-control(type="text", name="poll_q", placeholder="Question")
+			div.form-group
+				label(for='ans_a') Answer A:
+				input.form-control(type="text", name="ans_a", placeholder="Answer A")
+			div.form-group
+				label(for='ans_b') Answer B:
+				input.form-control(type="text", name="ans_b", placeholder="Answer B")
+			button.btn.btn-primary(type='submit') Submit

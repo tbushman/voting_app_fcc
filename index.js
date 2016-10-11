@@ -2,8 +2,13 @@ var express = require("express");
 var router = express.Router();
 var multer  = require('multer');
 var dotenv = require('dotenv');
-var User = require('./models/user')
+//var jsdom = require("jsdom");
+//var document = jsdom.jsdom();
+//var svg = d3.select(document.body).append('svg');
+var User = require('./models/user');
 var upload = multer();
+
+
 dotenv.load();
 
 /* GET login page. */
@@ -12,7 +17,8 @@ router.get('/login', function(req, res) {
 		title: 'FCC Voting App'
 	});
 });
-//var thisUser;
+
+/* LOGIN process */
 router.post('/login', upload.array(), function(req, res, next){
 	var usern = req.body.user;
 	var passw = req.body.pass;
@@ -38,21 +44,23 @@ router.post('/login', upload.array(), function(req, res, next){
 	}
 });
 
+/* INIT signup */
 router.post('/go', function(req, res, next){
 	return res.redirect('/signup');
 });
 
-
+/* GET signup page */
 router.get('/signup', function(req, res, next){
 	return res.render('signup', {
 		title: 'FCC Voting App'
 	});
 });
 
+/* signup process */
 router.post('/signup', upload.array(), function(req, res, next){
 	var usern = req.body.user;
 	var passw = req.body.pass;
-	console.log(req.body)
+	//console.log(req.body)
 	if (usern && passw) {
 		
 		var usr = {
@@ -85,6 +93,7 @@ router.get('/', function(req, res, next) {
 	});
 });
 
+/* INIT login page */
 router.post('/', function(req, res, next){
 	return res.redirect('/login');
 });
@@ -98,12 +107,54 @@ router.get('/vote', function(req, res, next) {
 
 /* GET create page */
 router.get('/create', function(req, res, next){
-	//req.session.userId
-	return res.render('create', {
-		title: 'FCC Voting App'//,
-//		user: thisUser,
-//		result: 'Hello'+thisUser+'! Create your poll'
-	});			
+	var user_id = req.session.userId;
+	User.findOne({_id: user_id}, 'user', function(error, usr){
+		if (error) {
+			return next(error);
+		} else {
+			return res.render('create', {
+				title: 'FCC Voting App',
+				greet: usr.user,
+				result: 'Hello'+usr.user+'! Create your poll'
+			});						
+		}
+	})
 });
+
+/* create poll process */
+router.post('/create', upload.array(), function(req, res, next){
+	//console.log(req.session.userId)
+	//console.log(req.body.poll_q)
+	var user_id = req.session.userId;
+	var poll_q = req.body.poll_q;
+	var ans_a = req.body.ans_a;
+	var ans_b = req.body.ans_b;
+	
+	var updateData = {
+		_id: user_id,
+		poll_q: poll_q,
+		ans_a: ans_a,
+		ans_b: ans_b
+	}
+	User.findOneAndUpdate(
+		{_id: user_id},
+		{$push: {"polls": updateData}},
+		{safe: true, upsert: true, new: true},
+		function(error, user){
+			console.log(error)
+		}
+	);
+	/*return res.render('poll', {
+		result: svg //?
+	});	*/
+	res.redirect('/');					
+	
+});
+
+//router.get('/newpoll', function(req, res, next){
+
+	
+//})
+
 
 module.exports = router;

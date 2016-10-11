@@ -14,7 +14,7 @@ var UserSchema = new mongoose.Schema({
 	},
 	polls: [
 		{
-			poll_id: {
+			_id: {
 				type: String
 			},
 			poll_q: {
@@ -37,14 +37,11 @@ var UserSchema = new mongoose.Schema({
 	],
 	votes: [
 		{
-			poll_id: {
-				type: String
-			},
 			ans_a: {
-				type: Boolean
+				type: Number
 			},
 			ans_b: {
-				type: Boolean
+				type: Number
 			}
 		}
 	]
