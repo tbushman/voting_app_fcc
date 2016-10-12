@@ -7,3 +7,34 @@ a {
   color: #00B7FF;
 }
 
+#vis {
+	width: 400px;
+	height: 300px;
+}
+
+.bar {
+  fill: steelblue;
+}
+
+.bar:hover {
+  fill: tomato;
+}
+
+.title {
+  font: bold 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.axis {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
