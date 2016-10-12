@@ -100,8 +100,8 @@ router.get('/', function(req, res, next) {
 					console.log(usr.polls[0].poll_q, usr.votes[0].poll)
 					return res.render('poll', {
 						title: 'FCC Voting App',
-						text: JSON.stringify(usr.polls[0].poll_q),
-						data: JSON.stringify(usr.votes[0].poll) //?
+						text: usr.polls[0].poll_q,
+						data: usr.votes[0].poll //?
 					});					
 				} else {
 					return res.render('index', {
