@@ -1,16 +1,15 @@
-extends layout
+extends index
 
 block content
-	div.container-fluid
-		h1.page-header #{title}
-		form(enctype="multipart/form-data", method="POST", action="/vote")
-			h4 #{poll_q}
-			label
-				input(type="radio", name=""+ans_a+"", value=""+ans_a+"")
-				h6 #{ans_a}
-			label
-				input(type="radio", name=""+ans_b+"", value=""+ans_b+"")
-				h6 #{ans_b}
-			input.btn.btn-default.margin(type="submit" value="Submit")
-		h4 output:
-		div #{result}
+	form(enctype="multipart/form-data", method="POST", action="/vote")
+		h4 #{poll_q}
+		label
+			input(type="radio", name=""+ans_a+"", value=""+ans_a+"")
+			h6 #{ans_a}
+		label
+			input(type="radio", name=""+ans_b+"", value=""+ans_b+"")
+			h6 #{ans_b}
+		input.btn.btn-default.margin(type="submit" value="Submit")
+	h4 output:
+	div #{result}
+	

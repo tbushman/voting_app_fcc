@@ -49,7 +49,10 @@ var UserSchema = new mongoose.Schema({
 					name: String,
 					value: Number			
 				}
-			]
+			],
+			index: {
+				type: Number
+			}
 		}
 	]
 }, { collection: 'fcc_voters_local' });

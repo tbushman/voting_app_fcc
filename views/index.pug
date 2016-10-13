@@ -11,5 +11,26 @@ block content
 			h4 Sign up to create a poll
 			input.btn.btn-default.margin(type="submit" value="Sign up")
 		h4 output:
-		include poll.pug
-		code #{result}
+		- var incoming = !{JSON.parse(data)};
+		- var index = incoming.index;
+		- var poll_q = incoming[index].poll_q;
+		h4 #{text}
+		each val in poll_q
+			svg(width = '400', height = '300', class='vis'+'index')
+	script(type='text/javascript').
+		var incoming = !{JSON.parse(data)}
+		var index = incoming.index;
+		var data = incoming.map(function(d, i){return d[i].votes;});
+		var viz = d3.select('.vis'+index);
+		var text = data[index].poll_q;
+		var	WIDTH = 400;
+		var	HEIGHT = 300;
+		var MARGINS = {top: 20, right: 20, bottom: 20, left: 50};
+		var xRange = d3.scale.ordinal().rangeBands([MARGINS.left, WIDTH - MARGINS.right], .1).domain(data.map(function (d) {return d.name;}));
+		var yRange = d3.scale.linear().range([HEIGHT - MARGINS.top, MARGINS.bottom]).domain([0, d3.max(data, function (d) {return d.value;})]);
+		var xAxis = d3.svg.axis().scale(xRange).ticks(d3.time.years, 5).tickSubdivide(true);
+		var yAxis = d3.svg.axis().scale(yRange).tickSize(5).orient('left').tickSubdivide(true);
+		viz.append('svg:g').attr('class', 'x axis').attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')').call(xAxis);
+		viz.append('svg:g').attr('class', 'y axis').attr('transform', 'translate(' + (MARGINS.left) + ',0)').call(yAxis);
+		viz.append('text').attr('text-anchor', 'middle').attr('transform', 'translate('+ 70 +','+(HEIGHT/2)+')rotate(-90)').text(text);
+		viz.selectAll('rect').data(data).enter().append('rect').attr('x', function (d, i) {return xRange(d[i].name);}).attr('y', function (d) {return yRange(d[i].value);}).attr('width', xRange.rangeBand()).attr('height', function (d, i) {return ((HEIGHT - MARGINS.bottom) - yRange(d[i].value));}).attr('fill', 'steelblue');		

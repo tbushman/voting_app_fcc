@@ -96,25 +96,87 @@ router.get('/', function(req, res, next) {
 			if (error) {
 				return next(error);
 			} else {
+				var pugData;
 				if (usr.votes !== [] && usr.votes[0].poll !== undefined) {
 					console.log(usr.polls[0].poll_q, usr.votes[0].poll)
-					return res.render('poll', {
-						title: 'FCC Voting App',
+					pugData = {
+						poll_q: usr.polls[0].poll_q,
 						text: usr.polls[0].poll_q,
-						data: usr.votes[0].poll //?
-					});					
+						data: usr.votes[0].poll, 
+						index: 0
+					};	
 				} else {
-					return res.render('index', {
-						title: 'FCC Voting App'
+					pugData = [];
+					
+					User.find({}, function(error, users){
+						if (users[0].polls !== [] && users[0].polls !== undefined) {
+							var data = users.votes;
+							var text = users.polls;
+							var pugData = [];
+							for (var i in data) { //gets all users
+								for (var j in data.votes) {
+									var pushPug = {
+										poll_q: text[i].poll_q[j],
+										text: text[i].poll_q[j],
+										data: data[i].poll[j],
+										index: j
+									};
+									pugData.push(JSON.stringify(pushPug));	
+								}
+							}
+						} else {
+							return res.render('vote', {
+								poll_q: 'Your poll here',
+								ans_a: 'Sample option A',
+								ans_b: 'Sample option B',
+								result: 'Login or sign up to create one'
+								
+							});
+						}
 					});
 				}
+				pugData = pugData[0];
+				return res.render('index', 
+					JSON.stringify(pugData)
+				);				
+				//console.log(pugData)
 			}
 		});		
 	} else {
-		return res.render('index', {
-			title: 'FCC Voting App'
+		User.find({}, function(error, users){
+			var pugData;
+			if (users[0].polls !== [] && users[0].polls !== undefined) {
+				var data = users.votes;
+				var text = users.polls;
+				pugData = [];
+				for (var i in data) { //gets all users
+					for (var j in data.votes) {
+						var pushPug = {
+							poll_q: text[i].poll_q[j],
+							text: text[i].poll_q[j],
+							data: data[i].poll[j],
+							index: j
+						};
+						pugData.push(pushPug);						
+					}
+				}				
+			} else {
+				return res.render('vote', {
+					poll_q: 'Your poll here',
+					ans_a: 'Sample option A',
+					ans_b: 'Sample option B',
+					result: 'Login or sign up to create one'
+					
+				});
+			}
+			pugData = pugData[0];
+			return res.render('index', 
+				JSON.stringify(pugData)
+			);				
 		});
+		
 	}
+	
 });
 
 /* INIT login page */
@@ -189,8 +251,8 @@ router.post('/create', upload.array(), function(req, res, next){
 	return res.redirect('/');					
 	
 });
-/*
-router.get('/poll', function(req, res, next){
+
+router.get('/vote', function(req, res, next){
 
 	var user_id = req.session.userId;
 	User.findOne({_id: user_id}, 'polls votes', function(error, userData){
@@ -202,6 +264,6 @@ router.get('/poll', function(req, res, next){
 	});
 	
 })
-*/
+
 
 module.exports = router;
