@@ -87,25 +87,78 @@ router.post('/signup', upload.array(), function(req, res, next){
 	//add all fields required
 });
 
+
+
+router.get('/polljson/:user', function(req, res, next) {
+	if (req.params.user) {
+		User.findOne({user: req.params.user}, {}, function(err, docs) {
+			return res.json(docs);
+		})
+	}
+})
+
+router.get('/polls', function(req, res, next){ 
+	User.find({}, function(error, users){ //all polls from most recent user
+		if (error) {
+			return next(error);
+		} else {
+			return res.json(users);
+		}
+	});
+});
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
+	//console.log(req.session)
 	if (req.session !== undefined) {
 		var user_id = req.session.userId;
-		console.log(user_id)
+/*		console.log(user_id)
+		return res.render('index', {
+			title: 'FCC Voting App',
+			greet: user_id,
+			result: 'Hello'+user_id+'! Create your poll'
+		});						
+		
+		User.findOne({_id: user_id}, 'votes polls', function(error, usr){
+			if (error) {
+						return next(error);
+			} else {
+				res.render('index', {
+					poll_q: usr.polls[0].poll_q, 
+					index: 0
+				})
+			}
+		});
+*/		
 		User.findOne({_id: user_id}, 'votes polls', function(error, usr){
 			if (error) {
 				return next(error);
 			} else {
-				var pugData;
+				//var pugData;
 				if (usr.votes !== [] && usr.votes[0].poll !== undefined) {
-					console.log(usr.polls[0].poll_q, usr.votes[0].poll)
-					pugData = {
-						poll_q: usr.polls[0].poll_q,
-						text: usr.polls[0].poll_q,
-						data: usr.votes[0].poll, 
-						index: 0
-					};	
+					//console.log(usr.polls[0].poll_q, usr.votes[0].poll) //single poll question for single poll
+					var pugData = [];
+					usr.votes.count(function(err, cnt){
+						
+						for (var i in cnt){
+							res.render('poll', {
+								index: i
+							})
+							var pugPush = {
+								poll_q: usr.polls[i].poll_q, 
+								text: usr.polls[i].poll_q, //txt
+								data: usr.votes[i].poll, //obj
+								index: i
+							}
+							pugData.push(pugPush);
+						}
+					})
+					return res.render('index', pugData);	
 				} else {
+					return res.render('index', {
+						title: 'FCC Voting App'
+					});						
+					/*
 					pugData = [];
 					
 					User.find({}, function(error, users){
@@ -114,16 +167,20 @@ router.get('/', function(req, res, next) {
 							var text = users.polls;
 							var pugData = [];
 							for (var i in data) { //gets all users
-								for (var j in data.votes) {
-									var pushPug = {
-										poll_q: text[i].poll_q[j],
-										text: text[i].poll_q[j],
-										data: data[i].poll[j],
-										index: j
-									};
-									pugData.push(JSON.stringify(pushPug));	
-								}
+								var pushPug = {
+									poll_q: text[i].poll_q,
+									text: text[i].poll_q,
+									data: data[i].poll,
+									index: i
+								};
+								pugData.push(pushPug);						
 							}
+							pugData = pugData[0];
+							return res.render('index', {
+								title: 'FCC Voting App',
+								data: JSON.stringify(pugData)
+							});				
+											
 						} else {
 							return res.render('vote', {
 								poll_q: 'Your poll here',
@@ -134,32 +191,38 @@ router.get('/', function(req, res, next) {
 							});
 						}
 					});
+					*/
 				}
-				pugData = pugData[0];
-				return res.render('index', 
-					JSON.stringify(pugData)
-				);				
-				//console.log(pugData)
 			}
-		});		
+		});	
+		
 	} else {
-		User.find({}, function(error, users){
+		return res.render('index', {
+			title: 'FCC Voting App'
+		});						
+		
+		/*
+		User.find({}, {}, function(error, users){
 			var pugData;
 			if (users[0].polls !== [] && users[0].polls !== undefined) {
 				var data = users.votes;
 				var text = users.polls;
 				pugData = [];
 				for (var i in data) { //gets all users
-					for (var j in data.votes) {
-						var pushPug = {
-							poll_q: text[i].poll_q[j],
-							text: text[i].poll_q[j],
-							data: data[i].poll[j],
-							index: j
-						};
-						pugData.push(pushPug);						
-					}
-				}				
+					var pushPug = {
+						poll_q: text[i].poll_q,
+						text: text[i].poll_q,
+						data: data[i].poll,
+						index: i //pass index to pug
+					};
+					pugData.push(pushPug);						
+				}
+				pugData = pugData[0];
+				return res.render('index', {
+					title: 'FCC Voting App',
+					data: JSON.stringify(pugData)
+				});				
+								
 			} else {
 				return res.render('vote', {
 					poll_q: 'Your poll here',
@@ -169,12 +232,8 @@ router.get('/', function(req, res, next) {
 					
 				});
 			}
-			pugData = pugData[0];
-			return res.render('index', 
-				JSON.stringify(pugData)
-			);				
 		});
-		
+		*/
 	}
 	
 });
@@ -215,6 +274,10 @@ router.post('/create', upload.array(), function(req, res, next){
 	var poll_q = req.body.poll_q;
 	var ans_a = req.body.ans_a;
 	var ans_b = req.body.ans_b;
+	var index;
+	User.count(function(err, cnt){
+		index = cnt-1;
+	})
 	
 	var updateData = {
 		_id: user_id,
@@ -224,6 +287,7 @@ router.post('/create', upload.array(), function(req, res, next){
 	}
 	var data = {
 		_id: updateData._id,
+		poll_q: poll_q,
 		poll: [
 			{
 				name: updateData.ans_a,
@@ -233,7 +297,8 @@ router.post('/create', upload.array(), function(req, res, next){
 				name: updateData.ans_b,
 				value: 0			
 			}
-		]
+		],
+		index: index
 	}
 	User.findOneAndUpdate(
 		{_id: user_id},
@@ -251,8 +316,8 @@ router.post('/create', upload.array(), function(req, res, next){
 	return res.redirect('/');					
 	
 });
-
-router.get('/vote', function(req, res, next){
+/*
+router. ('/vote', function(req, res, next){
 
 	var user_id = req.session.userId;
 	User.findOne({_id: user_id}, 'polls votes', function(error, userData){
@@ -264,6 +329,6 @@ router.get('/vote', function(req, res, next){
 	});
 	
 })
-
+*/
 
 module.exports = router;

@@ -1,12 +1,11 @@
 extends index
 block content
-	div.container-fluid
-		block content
+	svg(width = '400', height = '300', class='vis'+''+index+'')
 	script(type='text/javascript').
+		var data = !{JSON.stringify(data)}
+		var text = !{JSON.stringify(text)}
 		var index = !{JSON.stringify(index)}
-		var viz = d3.select('.vis '+index);
-		var data = !{JSON.stringify(data[index])}
-		var text = !{JSON.stringify(text[index])}
+		var viz = d3.select('.vis'+index);
 		var	WIDTH = 400;
 		var	HEIGHT = 300;
 		var MARGINS = {top: 20, right: 20, bottom: 20, left: 50};
@@ -18,4 +17,4 @@ block content
 		viz.append('svg:g').attr('class', 'y axis').attr('transform', 'translate(' + (MARGINS.left) + ',0)').call(yAxis);
 		viz.append('text').attr('text-anchor', 'middle').attr('transform', 'translate('+ 70 +','+(HEIGHT/2)+')rotate(-90)').text(text);
 		viz.selectAll('rect').data(data).enter().append('rect').attr('x', function (d) {return xRange(d.name);}).attr('y', function (d) {return yRange(d.value);}).attr('width', xRange.rangeBand()).attr('height', function (d) {return ((HEIGHT - MARGINS.bottom) - yRange(d.value));}).attr('fill', 'steelblue');
-		
+	

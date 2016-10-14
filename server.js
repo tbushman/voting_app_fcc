@@ -54,9 +54,11 @@ app.use(session({
 //var user_id;
 app.use(function (req, res, next) {
   	res.locals.currentUser = req.session.userId;
-	//var user_id = res.locals.currentUser;
-/*	if (user_id) {
-		User.findOne({_id: user_id}, 'polls votes', function(error, userData){
+	/*var user_id = res.locals.currentUser;
+	if (user_id) {
+		res.redirect('/');
+	}*/
+/*		User.findOne({_id: user_id}, 'polls votes', function(error, userData){
 			if (error) {
 				return next(error);
 			} else {

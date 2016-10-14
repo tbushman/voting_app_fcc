@@ -1,8 +1,5 @@
 extends index
 block content
 	div.container
-		- var text = !{JSON.stringify(text)}
-		h4 #{text}
-		- var index = !{JSON.stringify(index)}
-		each val in text
-			svg(width = '400', height = '300', class='vis index')
+		each val in #{index}
+			svg(width = '400', height = '300', class='vis'+''+index+'')

@@ -40,14 +40,13 @@ var UserSchema = new mongoose.Schema({
 			_id: {
 				type: String
 			},
+			poll_q: {
+				type: String
+			},
 			poll: [
 				{
 					name: String,
 					value: Number
-				},
-				{
-					name: String,
-					value: Number			
 				}
 			],
 			index: {
