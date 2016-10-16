@@ -1,34 +1,61 @@
 extends layout
-
+block page
+	- var menu = 'index'
 block content
-	div.container-fluid
-		h1.page-header #{title}
-		form(enctype="multipart/form-data", method="POST", action="/")
-			h4 Sign in to create a poll
-			input.btn.btn-default.margin(type="submit" value="Sign in")
-
-		form(enctype="multipart/form-data", method="POST", action="/go")
-			h4 Sign up to create a poll
-			input.btn.btn-default.margin(type="submit" value="Sign up")
-		h4 output:
-		include poll.pug
-		script(type='text/javascript').
-			var data = !{JSON.stringify(data)}
-			var text = !{JSON.stringify(text)}
-			var index = !{JSON.stringify(index)}
-			var viz = d3.select('.vis'+index);
+	- var pollString = JSON.stringify(polls)
+	input(type='hidden', class='poll-data-json', value= pollString )
+	if (polls.length === 0)
+		| There's no published content yet.
+		a(href="/login") Log in or
+		a(href="/signup") sign up
+		|  to create a poll.
+	else
+		
+		each poll, index in polls
+			div
+				h6
+					a(href="/polls/"+poll._id+"/"+index+"")= poll.poll_q
+					svg(width = '400', height = '300', class='vis'+''+index+'')
+					
+	script(type='text/javascript').
+		var incoming = $('.poll-data-json').val();
+		var polldata = JSON.parse(incoming);
+		for (var i in polldata) {
+			var data = polldata[i].poll_a;
+			var text = polldata[i].poll_q
+			var viz = d3.select('.vis'+i);
 			var	WIDTH = 400;
 			var	HEIGHT = 300;
-			var MARGINS = {top: 20, right: 20, bottom: 20, left: 50};
-			var xRange = d3.scale.ordinal().rangeBands([MARGINS.left, WIDTH - MARGINS.right], .1).domain(data.map(function (d) {return d.name;}));
-			var yRange = d3.scale.linear().range([HEIGHT - MARGINS.top, MARGINS.bottom]).domain([0, d3.max(data, function (d) {return d.value;})]);
-			var xAxis = d3.svg.axis().scale(xRange).ticks(d3.time.years, 5).tickSubdivide(true);
+			var MARGINS = {top: 20, right: 20, bottom: 50, left: 50};
+			var xRange = d3.scale.ordinal().rangeRoundBands([MARGINS.left, WIDTH - MARGINS.right], .1).domain(data.map(function (d) {return d.name;}));
+			var yRange = d3.scale.linear().range([(HEIGHT - MARGINS.bottom), 0]).domain([0, d3.max(data, function (d) {return d.value;})]);
+			var xAxis = d3.svg.axis().scale(xRange).orient('bottom');
 			var yAxis = d3.svg.axis().scale(yRange).tickSize(5).orient('left').tickSubdivide(true);
-			for (var i in data) {
-				viz.append('svg:g').attr('class', 'x axis').attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')').call(xAxis);
-				viz.append('svg:g').attr('class', 'y axis').attr('transform', 'translate(' + (MARGINS.left) + ',0)').call(yAxis);
-				viz.append('text').attr('text-anchor', 'middle').attr('transform', 'translate('+ 70 +','+(HEIGHT/2)+')rotate(-90)').text(text);
-				viz.selectAll('rect').data(data).enter().append('rect').attr('x', function (d) {return xRange(d.name);}).attr('y', function (d) {return yRange(d.value);}).attr('width', xRange.rangeBand()).attr('height', function (d) {return ((HEIGHT - MARGINS.bottom) - yRange(d.value));}).attr('fill', 'steelblue');
+			viz.append('svg:g').attr('class', 'x axis').attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')').call(xAxis).selectAll('.tick text').call(wrap, xRange.rangeBand());
+			viz.append('svg:g').attr('class', 'y axis').attr('transform', 'translate(' + (MARGINS.left) + ',0)').call(yAxis);
+			viz.append('text').attr('text-anchor', 'middle').attr('transform', 'translate('+ 40 +','+((HEIGHT-MARGINS.bottom)/2)+')rotate(-90)').text(text);
+			viz.selectAll('rect').data(data).enter().append('rect').attr('x', function (d) {return xRange(d.name);}).attr('y', function (d) {return yRange(d.value);}).attr('width', xRange.rangeBand()).attr('height', function (d) {return ((HEIGHT - MARGINS.bottom) - yRange(d.value));}).attr('fill', 'steelblue');
+			function wrap(text, width) {
+				text.each(function() {
+					var text = d3.select(this),
+						words = text.text().split(/\s+/).reverse(),
+						word,
+						line = [],
+						lineNumber = 0,
+						lineHeight = 1.1,
+						y = text.attr("y"),
+						dy = parseFloat(text.attr("dy")),
+						tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+					while (word = words.pop()) {
+						line.push(word);
+						tspan.text(line.join(" "));
+						if (tspan.node().getComputedTextLength() > width) {
+							line.pop();
+							tspan.text(line.join(" "));
+							line = [word];
+							tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+						}
+					}
+				});
 			}
-		
-		
+		}

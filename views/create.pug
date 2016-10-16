@@ -1,17 +1,33 @@
 extends layout
-
+block page
+	- var menu = 'create'
 block content
-	div.container-fluid
-		h1.page-header #{title}
-		h4 Hello, #{greet}! Create a poll.
-		form(enctype="multipart/form-data", method="POST", action="/create")
+	h4 Create a poll
+	div= error
+	div.col-md-8
+		form(action="/create", method="POST", role="form")
 			div.form-group
-				label(for='poll_q') Question:
-				input.form-control(type="text", name="poll_q", placeholder="Question")
+				label(for="poll_q") Question:
+				input#title.form-control(name="poll_q", type="text")
 			div.form-group
-				label(for='ans_a') Answer A:
-				input.form-control(type="text", name="ans_a", placeholder="Answer A")
-			div.form-group
-				label(for='ans_b') Answer B:
-				input.form-control(type="text", name="ans_b", placeholder="Answer B")
-			button.btn.btn-primary(type='submit') Submit
+				h4 Answer
+				div#ansGroup
+					div.input-group#0
+						input.form-control(type="text", name="ans_0")
+						span.input-group-btn
+							button.btn.btn-danger.remove(id="0") x
+				button.btn.btn-info.add +
+			p
+			button.btn.btn-primary(type="submit") Save
+	script(type='text/javascript').
+		$('.add').click(function(){
+			var index = $('.input-group').length;
+			$.post('/create/poll_a/'+index+'').then(function(response){
+				$('#ansGroup').append(response);
+			});
+			return false;
+		});
+		$(document).on('click', '.remove', function(){
+			var index = $(this).attr('id');
+			$('.input-group#'+index+'').remove();
+		});

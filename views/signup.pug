@@ -1,8 +1,8 @@
 extends layout
-
+block page
+	- var menu = 'signup'
 block content
 	div.container-fluid
-		h1.page-header #{title}
 		h4 Sign up to create a poll
 		form(enctype="multipart/form-data", method="POST", action="/signup")
 			div.form-group
@@ -12,5 +12,3 @@ block content
 				label(for='pass') Password:
 				input#pass.form-control(type="text", name="pass", placeholder="Password")
 			button.btn.btn-primary(type='submit') Sign up
-		h4 output:
-		code #{result}

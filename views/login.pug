@@ -1,14 +1,14 @@
 extends layout
-
+block page
+	- var menu = 'login'
 block content
-	div.container-fluid
-		h1.page-header #{title}
-		form(enctype="multipart/form-data", method="POST", action="/login")
-			h4 Sign in to create a poll
-			h6 Username:
-			input.form-control(type="text", name="user", placeholder="Username", value=" ")
-			h6 Password:
-			input.form-control(type="text", name="pass", placeholder="Password", value=" ")
-			input.btn.btn-default.margin(type="submit" value="Submit")
-		h4 output:
-		code #{result}
+	h4 Sign in to create a poll
+	div= error
+	form(enctype="multipart/form-data", method="POST", action="/login")
+		div.form-group
+			label(for='user') Username:
+			input.form-control(type="text", name="user", placeholder="Username")
+		div.form-group
+			label(for='pass') Password:
+			input.form-control(type="text", name="pass", placeholder="Password")
+		button.btn.btn-primary(type='submit') Submit

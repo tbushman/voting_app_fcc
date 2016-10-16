@@ -1,5 +1,10 @@
-extends index
+extends layout
 block content
-	div.container
-		each val in #{index}
-			svg(width = '400', height = '300', class='vis'+''+index+'')
+	h4= poll_q
+	form(enctype="multipart/form-data", method="POST", action="/vote")
+		each name, index in poll_a
+			label
+				input(type="radio", name=""+poll_a.name+"", value=""+poll_a.name+"")
+				h6 #{poll_a.name}
+		button.btn.btn-primary(type="submit") Vote
+		
