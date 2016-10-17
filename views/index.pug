@@ -14,7 +14,7 @@ block content
 		each poll, index in polls
 			div
 				h6
-					a(href="/polls/"+poll._id+"/"+index+"")= poll.poll_q
+					a(href="/polls/"+poll._id+"/"+poll.index+"")= poll.poll_q
 					svg(width = '400', height = '300', class='vis'+''+index+'')
 					
 	script(type='text/javascript').

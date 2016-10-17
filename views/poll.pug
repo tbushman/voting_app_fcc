@@ -2,9 +2,20 @@ extends layout
 block content
 	h4= poll_q
 	form(enctype="multipart/form-data", method="POST", action="/vote")
-		each name, index in poll_a
-			label
-				input(type="radio", name=""+poll_a.name+"", value=""+poll_a.name+"")
-				h6 #{poll_a.name}
+		input(type="hidden", name="index", value=""+index+"")
+		input(type="hidden", name="poll_id", value=""+_id+"")
+		each val, index in poll_a
+			div.radio
+				label
+					input(type="radio", class="radio", value=""+val.name+"") 
+					| #{val.name}
+				
 		button.btn.btn-primary(type="submit") Vote
+	script.
+		$(document).ready(function(){
+			$('input.radio').click(function(event){
+				$('input.radio').attr('name', 'un-checked');
+				$(event.target).attr('name', 'checked');
+			});
+		});
 		

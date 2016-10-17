@@ -1,15 +1,16 @@
 var express = require('express');
 var path = require('path');
+var _ = require('underscore');
 var routes = require('./routes')
 var dotenv = require('dotenv');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var session = require('express-session');
-var MongoStore = require('connect-mongo')(session);
+var MongoStore = require('connect-mongo')(session); //let connect-mongo access session
 var User = require('./models/user');
-var app = express();
-app.locals.appTitle = "FCC Voting app";
 dotenv.load();
+
+var index = require('./routes/index');
 
 var uri = process.env.DEVDB || process.env.MONGODB_URI;
 
@@ -17,35 +18,39 @@ mongoose.connect(uri);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
-// use sessions for tracking logins
-app.use(session({
-	secret: 'fccftw',
-	resave: true,
-	saveUninitialized: false,
-	store: new MongoStore({
-		mongooseConnection: db
-	})
-}));
+var app = express();
 
-// make user ID available in templates
-app.use(function (req, res, next) {
-  	res.locals.currentUser = req.session.userId;
-	if (req.session && req.session.admin) {
-	    res.locals.admin = true;
-	}
-	next();
-});
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 
 app.use(bodyParser.json());
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 app.use(urlencodedParser);
 
+// use sessions for tracking logins
+app.use(session({
+	secret: 'fccftw',
+	resave: true,
+	saveUninitialized: true,
+	store: new MongoStore({
+		mongooseConnection: db
+	})
+}));
+
+app.locals.appTitle = "FCC Voting app";
+
+// make user ID available in templates
+app.use(function (req, res, next) {
+  	res.locals.currentUser = req.session.userId;
+	if (req.session.userId) {
+	    res.locals.admin = true;
+	}
+	next();
+});
+
 app.use(express.static(__dirname + '/public'));
-app.set('view engine', 'pug');
-app.set('views', path.join(__dirname, 'views'));
 
 //routes
-var index = require('./routes/index');
 app.use('/', index);
 
 app.all('*', function(req, res) {

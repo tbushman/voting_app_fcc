@@ -2,27 +2,42 @@ extends layout
 block page
 	- var menu = 'create'
 block content
-	h4 Create a poll
+	- var pollString = JSON.stringify(polls)
+	input(type='hidden', class='poll-data-json', value= pollString )
+	h4 Hello, #{greet}! Create a poll.
 	div= error
 	div.col-md-8
 		form(action="/create", method="POST", role="form")
+			input(name="index", type="hidden", id="index")
 			div.form-group
 				label(for="poll_q") Question:
 				input#title.form-control(name="poll_q", type="text")
 			div.form-group
-				h4 Answer
+				label Answers
 				div#ansGroup
 					div.input-group#0
 						input.form-control(type="text", name="ans_0")
 						span.input-group-btn
 							button.btn.btn-danger.remove(id="0") x
+					div.input-group#1
+						input.form-control(type="text", name="ans_1")
+						span.input-group-btn
+							button.btn.btn-danger.remove(id="1") x
+					
 				button.btn.btn-info.add +
 			p
 			button.btn.btn-primary(type="submit") Save
 	script(type='text/javascript').
+		$(document).ready(function(){
+			var poll_data = $('.poll-data-json').val();
+			var polls = JSON.parse(poll_data);
+			var thisIndex = polls.length;
+			$("#index").val(thisIndex);
+		});
+		
 		$('.add').click(function(){
 			var index = $('.input-group').length;
-			$.post('/create/poll_a/'+index+'').then(function(response){
+			$.post('/api/poll_a/'+index+'').then(function(response){
 				$('#ansGroup').append(response);
 			});
 			return false;

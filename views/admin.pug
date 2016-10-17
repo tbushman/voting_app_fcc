@@ -3,26 +3,48 @@ block page
 	- var menu = 'admin'
 block content
 	div.admin
-		if (articles.length === 0 )
+		if (polls.length === 0 )
 			p
 				| Nothing to display. Add a new
 				a(href="/create") poll
 				|.
-			else
-				table.table.table-stripped
-					thead
-						tr
-							th(colspan="2") Actions
-							th Poll Title
-						tbody
-							each poll, index in polls
-								tr(data-id="#{poll._id}"+"@"+"#{poll.index}", class=(!poll.published)?'unpublished':'')
-									td.action
-										button.btn.btn-danger.btn-sm.remove(type="button")
-											span.glyphicon.glyphicon-remove(title="Remove")
-									td.action
-										button.btn.btn-default.btn-sm.publish(type="button")
-										span.glyphicon(class=(poll.published)?"glyphicon-pause":"glyphicon-play", title=(poll.published)?"Unpublish":"Publish")
-									td= poll.poll_q
-			script(type="text/javascript", src="admin.js")
-									
+		else
+			table.table.table-stripped
+				thead
+					tr
+						th(colspan="2") Actions
+						th Poll Title
+					tbody
+						each poll, index in polls
+							tr(data-id=""+poll._id+""+"@"+""+index+"")
+								td.action
+									button.btn.btn-danger.btn-sm.remove(type="button")
+										span.glyphicon.glyphicon-remove(title="Remove")
+								td.action
+									a.btn.btn-info.btn-sm.edit(type="button", href="/api/polls/"+poll._id+"/"+index+"")
+										span.glyphicon(class="glyphicon-edit", title="Edit")
+								td= poll.poll_q
+	script(type="text/javascript").
+		$(document).ready(function(){
+			function findTr(event) {
+				var target = event.srcElement || event.target;
+				var $target = $(target);
+				var $tr =  $target.parents('tr');
+				return $tr;
+			};
+			$(document).on('click', '.remove', function(event) {
+				var $tr = findTr(event);
+				var incoming_id = $tr.attr('data-id'); 
+				var index = incoming_id.split('@').pop();
+				var id = incoming_id.split('@')[0];
+				$.ajax({
+					url: '/api/polls/' + id + '/' + index,
+					type: 'DELETE',
+					success: function(data, status, xhr) {
+						$('.alert').addClass('hidden');
+						$tr.remove();
+					}
+				});
+			});
+		});
+		
