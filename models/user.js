@@ -17,6 +17,9 @@ var UserSchema = new mongoose.Schema({
 			_id: {
 				type: String
 			},
+			index: {
+				type: Number
+			},	
 			poll_q: {
 				type: String,
 				required: true,
@@ -28,10 +31,11 @@ var UserSchema = new mongoose.Schema({
 					value: Number
 				}
 			],
-			index: {
-				type: Number
-			}	
-			
+			voters: [
+				{
+					voter_id: String
+				}
+			]			
 		}
 	]
 }, { collection: 'fcc_voters_local' });

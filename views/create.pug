@@ -4,9 +4,9 @@ block page
 block content
 	- var pollString = JSON.stringify(polls)
 	input(type='hidden', class='poll-data-json', value= pollString )
-	h4 Hello, #{greet}! Create a poll.
 	div= error
-	div.col-md-8
+	div.col-xs-12.col-md-6
+		h4 Hello, #{greet}! Create a poll.
 		form(action="/create", method="POST", role="form")
 			input(name="index", type="hidden", id="index")
 			div.form-group
@@ -23,7 +23,7 @@ block content
 						input.form-control(type="text", name="ans_1")
 						span.input-group-btn
 							button.btn.btn-danger.remove(id="1") x
-					
+
 				button.btn.btn-info.add +
 			p
 			button.btn.btn-primary(type="submit") Save
@@ -34,7 +34,7 @@ block content
 			var thisIndex = polls.length;
 			$("#index").val(thisIndex);
 		});
-		
+
 		$('.add').click(function(){
 			var index = $('.input-group').length;
 			$.post('/api/poll_a/'+index+'').then(function(response){

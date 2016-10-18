@@ -7,7 +7,7 @@ var upload = multer();
 
 dotenv.load();
 
-// Authorization middleware
+// Middleware
 var authorize = function(req, res, next) {
   	if (req.session.userId) {
     	return next();
@@ -21,6 +21,36 @@ var loggedOut = function(req, res, next) {
 		return res.redirect('/admin');
 	}
 	return next();
+};
+
+var hasVoted = function(req, res, next) {
+	var voter_id = req.ip;
+	var poll_id = req.body.poll_id;
+
+	var index = req.body.index;
+	var poll_q = req.body.poll_q;
+	User.find({_id: req.body.poll_id, 'polls.index': index}, function(err, data){
+		data = data[0];
+		console.log(data)
+		function myIndexOf(voter_id) {
+			for (var i = 0; i < data.polls.length; i++) {
+				for (var j = 0; j < data.polls[i].voters.length; j++) {
+					if (data.polls[i].voters[j].voter_id === voter_id) {
+						return 1;
+					}
+				}
+			}  
+			return -1;
+		}
+		var voterFilter = myIndexOf(voter_id);
+		if (voterFilter != -1) {
+			var err = new Error('You have already voted on that poll.');
+	      	err.status = 400;
+	      	return next(err);
+		}
+		return next();
+	});	
+
 };
 
 /* GET login page. */
@@ -40,9 +70,9 @@ router.post('/login', upload.array(), function(req, res, next){
 	        	return next(err);
 	      	}  else {
 	        	req.session.userId = user._id;
-				req.session.user = user;
-				req.session.admin = user.admin;
-				return res.redirect('./admin');
+				//req.session.user = user;
+				//req.session.admin = user.admin;
+				return res.redirect('/admin');
 				
 	        	//return res.redirect('/create');
 	      	}
@@ -103,16 +133,10 @@ router.get('/logout', function(req, res, next) {
 
 /* GET home page. */
 router.get('/',  function(req, res, next){
-/*	if (!req.session) {
-		return res.render('index', {
-			polls: []
-		});
-	} */
 	User.aggregate([ //get all polls from all users :D
 	    { 
 			$project: { polls: 1 } 
 		},
-		/**/
 		{
 			$unwind:  '$polls' 
 		},
@@ -120,8 +144,6 @@ router.get('/',  function(req, res, next){
 			$group: { _id: null, polls: {$push: '$polls'} }
 		}
 	], function(err, data) {
-		//console.log(data)
-	  	//console.log(JSON.stringify(data[0].polls));
 		if (err) {
 			return next(err);
 		} else {
@@ -140,7 +162,6 @@ router.get('/polls/:id/:index', function(req, res, next) {
 		return next(new Error('No poll id.'));
 	}
 	var poll_id = req.params.id;
-	//User.findOne({'polls[index]._id': req.params.id}, function(error, poll){
 	User.findOne({_id: poll_id}, function(error, user){
 		if (error) {
 			return next(error);
@@ -173,7 +194,6 @@ router.get('/api/polls', function(req, res, next) {
 			$project: { _id: 0, polls: 1 } 
 		}
 	], function(err, data) {
-	  	//console.log(JSON.stringify(data[0].polls));
 		if (err) {
 			return next(err);
 		} else {
@@ -304,7 +324,7 @@ router.get('/create', authorize, function(req, res, next){
 	})
 });
 
-/* create poll process */
+/* POST create poll process */
 router.post('/create', authorize, upload.array(), function(req, res, next){
 	var user_id = req.session.userId;
 	var poll_q = req.body.poll_q;
@@ -338,8 +358,9 @@ router.post('/create', authorize, upload.array(), function(req, res, next){
 	
 });
 
-router.post('/vote', upload.array(), function(req, res, next){
-	
+/* POST vote */
+router.post('/vote', upload.array(), hasVoted, function(req, res, next){
+	var user_ip = req.ip;
 	var poll_id = req.body.poll_id;
 	
 	var index = req.body.index;
@@ -357,63 +378,16 @@ router.post('/vote', upload.array(), function(req, res, next){
 		var checked_val = vals[ans_ind];
 		checked_val++;
 		data.polls[index].poll_a[ans_ind].value = checked_val;
+		data.polls[index].voters.push({voter_id: user_ip});
 		data.save(function(error){
 			if(error) {
 				console.log('error!')
 			}
+			console.log(data.polls[index].poll_a[ans_ind].value)
+			return res.redirect('/');
 		});
-		console.log(data.polls[index].poll_a[ans_ind].value)
-/*		User.findById(req.body.poll_id, function(err, data) {
-			if(err) {
-				console.log(err)
-			} else {
-				da
-			}
-		})
-*/		/*function updateValues(index, name, value) {
-			
-		}
-		updateValues(ans_ind, req.body.checked, checked_val);
-		//answers.findOneAndUpdate({name: req.body.checked})
-		console.log(ans_ind)*/
 	});
-	return res.redirect('/');
-/*	var answers = [];
-	var keys = Object.keys(req.body);
-	keys.shift(); // remove poll_q
-	keys.shift(); //remove hidden inputs
-	for (var i = 0; i < keys.length; i++) {
-		var ans = req.body[keys[i]];
-		var value;
-		if (req.body.checked) {
-			value = 1;
-		} else {
-			value = 0;	
-		}
-		var 
-		answers.push({name: ans, value: value});
-	}
-	var data = {
-		_id: user_id,
-		poll_q: poll_q,
-		poll_a: answers,
-		index: index
-	}
-	User.findOneAndUpdate(
-		{_id: req.body.poll_id, "polls.index": index},
-		{$set: {"polls.$": data}},
-		//count: { $sum: 1 }
-		{safe: true, upsert: false},
-		function(error, data){
-			if (error) {
-				return next(error);
-			}
-		}
-	);
-	
-	return res.redirect('/');					
-*/	
-})
+});
 
 /* GET admin page */
 router.get('/admin', authorize, function(req, res, next) {

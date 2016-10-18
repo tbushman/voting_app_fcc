@@ -1,19 +1,20 @@
-extends layout
-block content
-	h4= poll_q
+mixin polldiv(poll)
+	h4= poll.poll_q
 	form(enctype="multipart/form-data", method="POST", action="/vote")
-		input(type="hidden", name="index", value=""+index+"")
-		input(type="hidden", name="poll_id", value=""+_id+"")
-		each val, index in poll_a
-			div.radio
-				label
-					input(type="radio", class="radio", value=""+val.name+"") 
-					| #{val.name}
+		input(type="hidden", name="index", value=""+poll.index+"")
+		input(type="hidden", name="poll_id", value=""+poll._id+"")
+		ul.list-group
+			each val, index in poll.poll_a
+				li.list-group-item
+					div.radio
+						label
+							input(type="radio", class="radio", value=""+val.name+"") 
+							| #{val.name}
 				
 		button.btn.btn-primary(type="submit") Vote
 	script.
 		$(document).ready(function(){
-			$('input.radio').click(function(event){
+			$('input.radio').parent().click(function(event){
 				$('input.radio').attr('name', 'un-checked');
 				$(event.target).attr('name', 'checked');
 			});

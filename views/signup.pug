@@ -2,7 +2,7 @@ extends layout
 block page
 	- var menu = 'signup'
 block content
-	div.container-fluid
+	div.col-xs-12.col-md-6
 		h4 Sign up to create a poll
 		form(enctype="multipart/form-data", method="POST", action="/signup")
 			div.form-group

@@ -5,19 +5,32 @@ block content
 	- var pollString = JSON.stringify(polls)
 	input(type='hidden', class='poll-data-json', value= pollString )
 	if (polls.length === 0)
-		| There's no published content yet.
-		a(href="/login") Log in or
-		a(href="/signup") sign up
-		|  to create a poll.
+		h3 There's no published content yet.
+		a(href="/login") Log in 
+		h4 or
+		a(href="/signup") sign up 
+		h4 to create a poll.
 	else
-		
-		each poll, index in polls
-			div
-				h6
-					a(href="/polls/"+poll._id+"/"+poll.index+"")= poll.poll_q
-					svg(width = '400', height = '300', class='vis'+''+index+'')
+		div.container-fluid
+			each poll, index in polls
+				div.panel.panel-default
+					div.panel-heading(id="toggle")
+						a.panel-title #{poll.poll_q}
+						 					
+					div.panel-body(id="pollDiv", class="pollDiv")
+						include poll.pug
+						div#poll.col-xs-12.col-md-6
+							+polldiv(poll)
+						svg#chart.col-xs-12.col-md-6(width = '400', height = '300', class='vis'+''+index+'')
 					
 	script(type='text/javascript').
+		$(document).ready(function(){
+			$('.pollDiv').addClass('hider');
+			$(document).on('click', '#toggle', function(event){
+				event.preventDefault();
+				$(this).next('#pollDiv').toggleClass('hider');
+			});
+		});
 		var incoming = $('.poll-data-json').val();
 		var polldata = JSON.parse(incoming);
 		for (var i in polldata) {
@@ -32,9 +45,8 @@ block content
 			var xAxis = d3.svg.axis().scale(xRange).orient('bottom');
 			var yAxis = d3.svg.axis().scale(yRange).tickSize(5).orient('left').tickSubdivide(true);
 			viz.append('svg:g').attr('class', 'x axis').attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')').call(xAxis).selectAll('.tick text').call(wrap, xRange.rangeBand());
-			viz.append('svg:g').attr('class', 'y axis').attr('transform', 'translate(' + (MARGINS.left) + ',0)').call(yAxis);
-			viz.append('text').attr('text-anchor', 'middle').attr('transform', 'translate('+ 40 +','+((HEIGHT-MARGINS.bottom)/2)+')rotate(-90)').text(text);
 			viz.selectAll('rect').data(data).enter().append('rect').attr('x', function (d) {return xRange(d.name);}).attr('y', function (d) {return yRange(d.value);}).attr('width', xRange.rangeBand()).attr('height', function (d) {return ((HEIGHT - MARGINS.bottom) - yRange(d.value));}).attr('fill', 'steelblue');
+			viz.selectAll('.text').data(data).enter().append('text').attr('class', 'label').attr('x', (function(d) { return xRange(d.name) + xRange.rangeBand() /2 ; })).attr('y', function(d) {return yRange(d.value) + 40; }).attr('dy', '.75em').text(function(d) {return d.value});
 			function wrap(text, width) {
 				text.each(function() {
 					var text = d3.select(this),
@@ -58,4 +70,4 @@ block content
 					}
 				});
 			}
-		}
+		}		

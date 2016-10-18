@@ -2,13 +2,14 @@ extends layout
 block page
 	- var menu = 'login'
 block content
-	h4 Sign in to create a poll
-	div= error
-	form(enctype="multipart/form-data", method="POST", action="/login")
-		div.form-group
-			label(for='user') Username:
-			input.form-control(type="text", name="user", placeholder="Username")
-		div.form-group
-			label(for='pass') Password:
-			input.form-control(type="text", name="pass", placeholder="Password")
-		button.btn.btn-primary(type="submit") Log in
+	div.col-xs-12.col-md-6
+		h4 Sign in to create a poll
+		div= error
+		form(enctype="multipart/form-data", method="POST", action="/login")
+			div.form-group
+				label(for='user') Username:
+				input.form-control(type="text", name="user", placeholder="Username")
+			div.form-group
+				label(for='pass') Password:
+				input.form-control(type="text", name="pass", placeholder="Password")
+			button.btn.btn-primary(type="submit") Log in

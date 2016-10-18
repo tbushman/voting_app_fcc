@@ -1,10 +1,33 @@
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font: 'Open Sans', sans-serif;
 }
 
 a {
   color: #00B7FF;
+}
+.wrapper {
+	padding-top: 100px;
+}
+
+.pollDiv.hider {
+	display: none;
+}
+
+#toggle {
+	cursor: pointer;
+}
+
+.panel-title:hover {
+	text-decoration: none;
+}
+
+#poll, #chart {
+	margin: 0 auto;
+	display: inline-block;
+}
+
+.input-group {
+	margin-bottom: 15px;
 }
 
 .vis {
@@ -20,12 +43,19 @@ a {
   fill: tomato;
 }
 
+svg text.label {
+  fill:white;
+  font: 16px;  
+  font-weight: 400;
+  text-anchor: middle;
+}
 .title {
-  font: bold 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
 }
 
-.axis {
-  font: 10px sans-serif;
+tspan {
+  font-size: 10.5px!important;
+  font-weight: 400;
 }
 
 .axis path,

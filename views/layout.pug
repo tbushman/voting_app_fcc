@@ -2,6 +2,7 @@ doctype html
 html
 	head
 		title= appTitle
+		link(href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet")
 		link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css')
 		link(rel='stylesheet', href='/stylesheets/style.css', type='text/css')
 		script(type="text/javascript", src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js")
@@ -10,16 +11,14 @@ html
 		script(type="text/javascript", src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")
 		meta(name="viewport", content="width=device-width, initial-scale=1.0")
 	body
-		div.container-fluid
-			h1.page-header= appTitle
-				block page
-				block header
-					div
-						include includes/menu
-				block alert
-					div.alert.alert-warning.hidden
-				.content
-					block content
+		div.container-fluid.wrapper
+			block page
+			block header
+				include includes/menu
+			block alert
+				div.alert.alert-warning.hidden
+			.content.container-fluid
+				block content
 			block footer
 				footer
 					.container
