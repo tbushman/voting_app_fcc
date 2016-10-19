@@ -2,7 +2,7 @@ mixin polldiv(poll)
 	h4= poll.poll_q
 	form(enctype="multipart/form-data", method="POST", action="/vote")
 		input(type="hidden", name="index", value=""+poll.index+"")
-		input(type="hidden", name="poll_id", value=""+poll._id+"")
+		input(type="hidden", name="poll_id", value=""+poll.poll_id+"")
 		ul.list-group
 			each val, index in poll.poll_a
 				li.list-group-item

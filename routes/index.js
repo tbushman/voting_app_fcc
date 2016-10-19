@@ -2,18 +2,10 @@ var express = require("express");
 var router = express.Router();
 var multer  = require('multer');
 var dotenv = require('dotenv');
-//var models = require('../models/index');
 var User = require('../models/user');
-var Poll = require('../models/poll')
 var upload = multer();
 
 dotenv.load();
-
-/*router.use(function(req, res, next) {
-	if (!Poll || !User) return next(new Error("No "))
-	models = models;
-	return next();
-});*/
 
 // Middleware
 var authorize = function(req, res, next) {
@@ -37,12 +29,15 @@ var hasVoted = function(req, res, next) {
 
 	var index = req.body.index;
 	var poll_q = req.body.poll_q;
-	Poll.findOne({_id: req.body.poll_id, index: index}, function(err, docs){
-		
+	User.find({_id: req.body.poll_id, 'polls.index': index}, function(err, data){
+		data = data[0];
+		//console.log(data)
 		function myIndexOf(voter_id) {
-			for (var i = 0; i < docs.voters.length; i++) {
-				if (docs.voters[i].voter_id === voter_id) {
-					return 1;
+			for (var i = 0; i < data.polls.length; i++) {
+				for (var j = 0; j < data.polls[i].voters.length; j++) {
+					if (data.polls[i].voters[j].voter_id === voter_id) {
+						return 1;
+					}
 				}
 			}  
 			return -1;
@@ -89,6 +84,11 @@ router.post('/login', upload.array(), function(req, res, next){
 	}
 });
 
+/* INIT signup */
+router.post('/go', function(req, res, next){
+	return res.redirect('/signup');
+});
+
 /* GET signup page */
 router.get('/signup', loggedOut, function(req, res, next){
 	return res.render('signup');
@@ -108,13 +108,13 @@ router.post('/signup', upload.array(), function(req, res, next){
 			if (error) {
 				return next(error);
 			} else {
-				return res.redirect('/admin')
+				return res.redirect('/')
 			}
 		});
 	} else {
 		var err = new Error('All fields required.');
-      	err.status = 400;
-      	return next(err);
+		err.status = 400;
+		return next(err);
 	}
 });
 
@@ -133,15 +133,49 @@ router.get('/logout', function(req, res, next) {
 
 /* GET home page. */
 router.get('/',  function(req, res, next){
-	Poll.find({}, function(err, docs) {
-		if (err) {
-			return next(err);
-		} else {
+	User.find({}, 'polls', function(error, docs){
+		console.log(docs)
+		function myIndexOf(check_empty) {
+			for (var i in check_empty) {
+				if (check_empty == null) {
+					return -1
+				}
+			}
+			return 1
+		}
+		var emptyFilter = [];
+		for (var i in docs) {
+			var filter = myIndexOf(docs[i].polls[0])
+			emptyFilter.push(filter);
+		}
+		
+		if (emptyFilter.indexOf(1) == -1) {
 			return res.render('index', {
-				polls: docs
+				polls: {}
+			});
+		} else {
+			User.aggregate([ //get all polls from all users :D
+			    { 
+					$project: { polls: 1 } 
+				},
+				{
+					$unwind:  '$polls' 
+				},
+				{
+					$group: { _id: null, polls: {$push: '$polls'} }
+				}
+			], function(err, data) {
+				if (err) {
+					return next(err);
+				} else {
+					//console.log(data[0].polls)
+					return res.render('index', {
+						polls: data[0].polls
+					});
+				}
 			});
 		}
-	});
+	})
 });
 
 
@@ -152,15 +186,15 @@ router.get('/polls/:id/:index', function(req, res, next) {
 		return next(new Error('No poll id.'));
 	}
 	var poll_id = req.params.id;
-	Poll.findOne({_id: poll_id}, function(error, docs){
+	User.findOne({_id: poll_id}, function(error, user){
 		if (error) {
 			return next(error);
 		} else {
 			return res.render('poll', {
-				_id: poll_id,
+				poll_id: poll_id,
 				index: index,
-				poll_q: docs.poll_q,
-				poll_a: docs.poll_a //array
+				poll_q: user.polls[index].poll_q,
+				poll_a: user.polls[index].poll_a //array
 			});						
 		}
 	})
@@ -179,12 +213,16 @@ router.get('/api/users', function(req, res, next) {
 
 /* GET polls API */
 router.get('/api/polls', function(req, res, next) {
-	Poll.find({}, function(err, docs) {
+	User.aggregate([
+	    { 
+			$project: { _id: 0, polls: 1 } 
+		}
+	], function(err, data) {
 		if (err) {
 			return next(err);
 		} else {
 			return res.send({
-				polls: docs
+				polls: data[0].polls
 			});
 		}
 	});
@@ -192,18 +230,22 @@ router.get('/api/polls', function(req, res, next) {
 
 
 /* POST poll API */
-/*router.post('/api/polls', function(req, res, next) { //see admin.pug
+router.post('/api/polls', function(req, res, next) { //see admin.pug
 	var user_id = req.session.userId;
 	if (!req.body.poll) {
 		return next(new Error('No poll data.'));
 	}
   	var poll = req.body.poll;
-	Poll.insert(poll, function(error, data){
+	User.findOneAndUpdate(
+		{_id: user_id},
+		{$push: {"polls": poll}},
+		{safe: true, upsert: true, new: true},
+		function(error, data){
 			//console.log(data)
 			res.send(data);
 		}
 	);
-});*/
+});
 
 /* GET single poll API */
 router.get('/api/polls/:id/:index', function(req, res, next){
@@ -211,15 +253,15 @@ router.get('/api/polls/:id/:index', function(req, res, next){
 	var index = req.params.index;
 	var poll_id = req.params.id;
 	//User.findOne({'polls[index]._id': req.params.id}, function(error, poll){
-	Poll.findOne({user_id: user_id, index: index}, function(error, data){
+	User.findOne({_id: user_id}, function(error, user){
 		if (error) {
 			return next(error);
 		} else {
 			return res.render('edit', {
-				_id: poll_id,
+				poll_id: poll_id,
 				index: index,
-				poll_q: data.poll_q,
-				poll_a: user.poll_a //array
+				poll_q: user.polls[index].poll_q,
+				poll_a: user.polls[index].poll_a //array
 			});						
 		}
 	})
@@ -238,13 +280,15 @@ router.post('/api/polls/:id/:index', upload.array(), function(req, res, next) {
 		var value = 0;
 		answers.push({name: ans, value: value});
 	}
-	Poll.findOneAndUpdate(
-		{_id: req.params.id, index: index, user_id: user_id},
-		{$set: {
-			poll_q: poll_q,
-			poll_a: answers
-			}
-		},
+	var data = {
+		poll_id: user_id,
+		poll_q: poll_q,
+		poll_a: answers,
+		index: index
+	}
+	User.findOneAndUpdate(
+		{_id: req.params.id, "polls.index": index},
+		{$set: {"polls.$": data}},
 		//count: { $sum: 1 }
 		{safe: true, upsert: false},
 		function(error, data){
@@ -267,9 +311,9 @@ router.delete('/api/polls/:id/:index', function(req, res, next) {
 	if (!req.params.id) {
 		return next(new Error('No poll ID.'));
 	}
-	Poll.remove(
-		{_id: poll_id, index: index, user_id: user_id},
-		{justOne: true},
+	User.findOneAndUpdate(
+		{_id: user_id},
+		{$pull: {"polls": { index: index }}},
 		function(err, data){
 			if (err) {
 				return next(err);
@@ -291,21 +335,15 @@ router.post('/api/poll_a/:index', function(req, res){
 /* GET create page */
 router.get('/create', authorize, function(req, res, next){
 	var user_id = req.session.userId;
-	Poll.find({user_id: user_id}, function(error, docs){
+	User.findOne({_id: user_id}, function(error, usr){
 		if (error) {
 			return next(error);
 		} else {
-			User.findOne({_id: user_id}, function(err, data) {
-				if (err) {
-					return next(err)
-				} else {
-					return res.render('create', {
-						greet: data.user,
-						result: 'Hello'+data.user+'! Create your poll',
-						polls: docs
-					});						
-				}				
-			})
+			return res.render('create', {
+				greet: usr.user,
+				result: 'Hello'+usr.user+'! Create your poll',
+				polls: usr.polls
+			});						
 		}
 	})
 });
@@ -325,17 +363,20 @@ router.post('/create', authorize, upload.array(), function(req, res, next){
 	}
 	var index = req.body.index;
 	var data = {
-		user_id: user_id,
+		poll_id: user_id,
 		poll_q: poll_q,
 		poll_a: answers,
-		index: index,
-		voters: []
+		index: index
 	}
-	Poll.insert(data,
-		function(error, docs){
+	User.findOneAndUpdate(
+		{_id: user_id},
+		{$push: {"polls": data}},
+		{safe: true, upsert: true, new: true},
+		function(error, user){
 			if (error) {
 				return next(error);
 			}
+			console.log(user.poll_a)
 		}
 	);
 	return res.redirect('/');					
@@ -349,49 +390,112 @@ router.post('/vote', upload.array(), hasVoted, function(req, res, next){
 	
 	var index = req.body.index;
 	var poll_q = req.body.poll_q;
-	Poll.findOne({_id: req.body.poll_id, index: index}, function(err, data){
-		//data = data[0]
-		var vals = [];
-		var names = [];
-		var answers = data.poll_a;
-		for (var i = 0; i < answers.length; i++) {
-			vals.push(answers[i].value);
-			names.push(answers[i].name);
-		}
-		var ans_ind = names.indexOf(req.body.checked);
-		var checked_val = vals[ans_ind];
-		checked_val++;
-		data.poll_a[ans_ind].value = checked_val;
-		data.voters.push({voter_id: user_ip});
-		data.save(function(error){
-			if(error) {
-				console.log('error!')
+	User.findOne({_id: req.body.poll_id, 'polls.index': index}, function(err, data){
+		if (err) {
+			return next(err); 
+		} else {
+			//data = data[0]
+			var vals = [];
+			var names = [];
+			
+			var answers = data.polls[index].poll_a;
+			for (var i = 0; i < answers.length; i++) {
+				vals.push(answers[i].value);
+				names.push(answers[i].name);
 			}
-			console.log(data.poll_a[ans_ind].value)
-			return res.redirect('/');
-		});
+			var ans_ind = names.indexOf(req.body.checked);
+			var checked_val = vals[ans_ind];
+			checked_val++;
+			var newAnswers = [];
+			for (i = 0; i < answers.length; i++) {
+				if (i === ans_ind) {
+					newAnswers.push({name: names[i], value: checked_val})
+				} else {
+					newAnswers.push({name: names[i], value: vals[i]})
+				}
+			}
+			console.log(newAnswers)
+			newAnswers = JSON.parse(JSON.stringify(newAnswers))
+			//newAnswers = JSON.stringify(newAnswers)
+			//data.polls[index].poll_a[ans_ind].value = checked_val;
+			//data.polls[index].voters.push({voter_id: user_ip});
+			
+			//var pollAString = {};
+			//pollAString['$polls.'+index+'.poll_a'] = newAnswers;
+			
+			//JSON.stringify('$polls.'+index+'.poll_a.'+ans_ind+'.value');
+			//var userIpString = '$polls.'+index+'.voters';
+			//{};
+			//userIpString['$polls.'+index+'.voters'].push({voter_id: user_ip});
+			//JSON.stringify('$polls.'+index+'.voters');
+			/*var q = User.where({_id: req.body.poll_id, 'polls.index': index});
+			q.update(
+				{$set: {
+					pollAString, $push: {userIpString: {voter_id: user_ip}}}
+			)*/
+			var queryObj = {'_id': req.body.poll_id, 'polls.index': index};
+			var set = {$set: {}};
+			set.$set['polls.$.poll_a'] = newAnswers;
+			var push = {$push: {}};
+			push.$push['polls.$.voters'] = JSON.parse(JSON.stringify({voter_id: user_ip}));
+			/*var updateObj = {
+				$set: {'$polls.$.poll_a': newAnswers}
+			}*/
+			var options = { 
+				//'overwrite': true, 
+				//'new': true, 
+				//'safe': true, 
+				//'upsert': false, 
+				//'multi': false 
+				}
+			
+			User.findOneAndUpdate(
+				queryObj, 
+				set, 
+				push, 
+				options,
+				//{
+				//findAndModify: {'$polls.$'}
+				//query: { 
+				//_id: req.body.poll_id, 'polls.index': index},
+				//update: 
+				//{$set: {'$polls.$.poll_a': newAnswers}},//, $push: {'$polls.$.voters': {voter_id: user_ip}}},
+				//true, false,
+				//count: { $sum: 1 }
+				//{ overwrite: true, new: true, safe: true, upsert: false, multi: false }, 
+				function(error){
+					if(error) {
+						console.log('error!')
+					}
+					//console.log(data.polls[index].poll_a[ans_ind].value)
+					//console.log(data.polls[index].poll_a)
+					//console.log(data)
+					//callback();
+					return res.redirect('/');
+			});
+			/*data.save(function(error){
+				if(error) {
+					console.log('error!')
+				}
+				console.log(data.polls[index].poll_a[ans_ind].value)
+				return res.redirect('/');
+			});*/
+		}
 	});
 });
 
 /* GET admin page */
-router.get('/admin'/*, authorize*/, function(req, res, next) {
+router.get('/admin', authorize, function(req, res, next) {
 	User.findOne({_id: req.session.userId}, function(err, user) {
 	  	//console.log(JSON.stringify(data[0].polls));
 		if (err) {
 			return next(err);
 		} else {
-			Poll.find({user_id: req.session.userId}, function(error, docs){
-				if (error) {
-					return next(error);
-				} else {
-					return res.render('admin', {
-						polls: docs
-					});
-				}
+			return res.render('admin', {
+				polls: user.polls
 			});
 		}
 	});
 });
 
 module.exports = router;
-

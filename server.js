@@ -4,12 +4,11 @@ var _ = require('underscore');
 var routes = require('./routes')
 var dotenv = require('dotenv');
 var bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser')
+//var cookieParser = require('cookie-parser')
 var mongoose = require('mongoose');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session); //let connect-mongo access session
-var models = require('./models');
-//var User = require('./models/user');
+var User = require('./models/user');
 dotenv.load();
 
 var index = require('./routes/index');
@@ -22,15 +21,11 @@ db.on('error', console.error.bind(console, 'connection error:'));
 
 var app = express();
 
-
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
 //app.set('trust proxy', true);
 
-app.use(bodyParser.json());
-var urlencodedParser = bodyParser.urlencoded({ extended: false })
-app.use(urlencodedParser);
 
 //app.use(cookieParser());
 // use sessions for tracking logins
@@ -42,8 +37,7 @@ app.use(session({
 		mongooseConnection: db
 	})
 }));
-/*
-var sess = {
+/*var sess = {
   	secret: 'keyboard cat',
 	resave: false,
 	saveUninitialized: false,
@@ -63,16 +57,18 @@ app.use(session(sess))
 */
 app.locals.appTitle = "FCC Voting app";
 
-
 // make user ID available in templates
 app.use(function (req, res, next) {
-	console.log(req.session.userId)
   	res.locals.currentUser = req.session.userId;
 	/*if (req.session.userId) {
 	    res.locals.admin = true;
 	}*/
 	next();
 });
+
+app.use(bodyParser.json());
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
+app.use(urlencodedParser);
 
 app.use(express.static(__dirname + '/public'));
 

@@ -12,11 +12,36 @@ var UserSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 	},
-	admin: {
-	    type: Boolean,
-	    default: false
-	}
-}/*, { collection: 'fcc_voters_local' }*/);
+	polls: [
+		{
+			_id: {
+				type: String
+			},
+			poll_id: {
+				type: String
+			},
+			index: {
+				type: Number
+			},	
+			poll_q: {
+				type: String,
+				required: true,
+				trim: true
+			},
+			poll_a: [
+				{
+					name: String,
+					value: Number
+				}
+			],
+			voters: [
+				{
+					voter_id: String
+				}
+			]			
+		}
+	]
+}, { collection: 'fcc_voters_local' });
 // authenticate input against database documents
 UserSchema.statics.authenticate = function(user, pass, callback) {
 	User.findOne({ user: user })
@@ -48,6 +73,6 @@ UserSchema.pre('save', function(next) {
     	next();
   	})
 });
-var User = mongoose.model('User', UserSchema, 'fcc_voters_local');
+var User = mongoose.model('User', UserSchema);
 
 module.exports = User;

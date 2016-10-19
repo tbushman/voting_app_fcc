@@ -16,12 +16,12 @@ block content
 						th Poll Title
 					tbody
 						each poll, index in polls
-							tr(data-id=""+poll._id+""+"@"+""+index+"")
+							tr(data-id=""+poll.poll_id+""+"@"+""+index+"")
 								td.action
 									button.btn.btn-danger.btn-sm.remove(type="button")
 										span.glyphicon.glyphicon-remove(title="Remove")
 								td.action
-									a.btn.btn-info.btn-sm.edit(type="button", href="/api/polls/"+poll._id+"/"+index+"")
+									a.btn.btn-info.btn-sm.edit(type="button", href="/api/polls/"+poll.poll_id+"/"+index+"")
 										span.glyphicon(class="glyphicon-edit", title="Edit")
 								td= poll.poll_q
 	script(type="text/javascript").
