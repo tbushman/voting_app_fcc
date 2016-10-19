@@ -8,7 +8,8 @@ var cookieParser = require('cookie-parser')
 var mongoose = require('mongoose');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session); //let connect-mongo access session
-var User = require('./models/user');
+var models = require('./models');
+//var User = require('./models/user');
 dotenv.load();
 
 var index = require('./routes/index');
@@ -21,6 +22,7 @@ db.on('error', console.error.bind(console, 'connection error:'));
 
 var app = express();
 
+
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -30,16 +32,17 @@ app.use(bodyParser.json());
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 app.use(urlencodedParser);
 
-app.use(cookieParser());
+//app.use(cookieParser());
 // use sessions for tracking logins
-/*app.use(session({
+app.use(session({
 	secret: 'fccftw',
 	resave: true,
 	saveUninitialized: false,
 	store: new MongoStore({
 		mongooseConnection: db
 	})
-}));*/
+}));
+/*
 var sess = {
   	secret: 'keyboard cat',
 	resave: false,
@@ -57,11 +60,13 @@ if (app.get('env') === 'production') {
 }
 
 app.use(session(sess))
-
+*/
 app.locals.appTitle = "FCC Voting app";
+
 
 // make user ID available in templates
 app.use(function (req, res, next) {
+	console.log(req.session.userId)
   	res.locals.currentUser = req.session.userId;
 	/*if (req.session.userId) {
 	    res.locals.admin = true;

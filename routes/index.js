@@ -2,10 +2,18 @@ var express = require("express");
 var router = express.Router();
 var multer  = require('multer');
 var dotenv = require('dotenv');
+//var models = require('../models/index');
 var User = require('../models/user');
+var Poll = require('../models/poll')
 var upload = multer();
 
 dotenv.load();
+
+/*router.use(function(req, res, next) {
+	if (!Poll || !User) return next(new Error("No "))
+	models = models;
+	return next();
+});*/
 
 // Middleware
 var authorize = function(req, res, next) {
@@ -29,15 +37,12 @@ var hasVoted = function(req, res, next) {
 
 	var index = req.body.index;
 	var poll_q = req.body.poll_q;
-	User.find({_id: req.body.poll_id, 'polls.index': index}, function(err, data){
-		data = data[0];
-		console.log(data)
+	Poll.findOne({_id: req.body.poll_id, index: index}, function(err, docs){
+		
 		function myIndexOf(voter_id) {
-			for (var i = 0; i < data.polls.length; i++) {
-				for (var j = 0; j < data.polls[i].voters.length; j++) {
-					if (data.polls[i].voters[j].voter_id === voter_id) {
-						return 1;
-					}
+			for (var i = 0; i < docs.voters.length; i++) {
+				if (docs.voters[i].voter_id === voter_id) {
+					return 1;
 				}
 			}  
 			return -1;
@@ -84,11 +89,6 @@ router.post('/login', upload.array(), function(req, res, next){
 	}
 });
 
-/* INIT signup */
-router.post('/go', function(req, res, next){
-	return res.redirect('/signup');
-});
-
 /* GET signup page */
 router.get('/signup', loggedOut, function(req, res, next){
 	return res.render('signup');
@@ -133,22 +133,12 @@ router.get('/logout', function(req, res, next) {
 
 /* GET home page. */
 router.get('/',  function(req, res, next){
-	User.aggregate([ //get all polls from all users :D
-	    { 
-			$project: { polls: 1 } 
-		},
-		{
-			$unwind:  '$polls' 
-		},
-		{
-			$group: { _id: null, polls: {$push: '$polls'} }
-		}
-	], function(err, data) {
+	Poll.find({}, function(err, docs) {
 		if (err) {
 			return next(err);
 		} else {
 			return res.render('index', {
-				polls: data[0].polls
+				polls: docs
 			});
 		}
 	});
@@ -162,15 +152,15 @@ router.get('/polls/:id/:index', function(req, res, next) {
 		return next(new Error('No poll id.'));
 	}
 	var poll_id = req.params.id;
-	User.findOne({_id: poll_id}, function(error, user){
+	Poll.findOne({_id: poll_id}, function(error, docs){
 		if (error) {
 			return next(error);
 		} else {
 			return res.render('poll', {
 				_id: poll_id,
 				index: index,
-				poll_q: user.polls[index].poll_q,
-				poll_a: user.polls[index].poll_a //array
+				poll_q: docs.poll_q,
+				poll_a: docs.poll_a //array
 			});						
 		}
 	})
@@ -189,16 +179,12 @@ router.get('/api/users', function(req, res, next) {
 
 /* GET polls API */
 router.get('/api/polls', function(req, res, next) {
-	User.aggregate([
-	    { 
-			$project: { _id: 0, polls: 1 } 
-		}
-	], function(err, data) {
+	Poll.find({}, function(err, docs) {
 		if (err) {
 			return next(err);
 		} else {
 			return res.send({
-				polls: data[0].polls
+				polls: docs
 			});
 		}
 	});
@@ -206,22 +192,18 @@ router.get('/api/polls', function(req, res, next) {
 
 
 /* POST poll API */
-router.post('/api/polls', function(req, res, next) { //see admin.pug
+/*router.post('/api/polls', function(req, res, next) { //see admin.pug
 	var user_id = req.session.userId;
 	if (!req.body.poll) {
 		return next(new Error('No poll data.'));
 	}
   	var poll = req.body.poll;
-	User.findOneAndUpdate(
-		{_id: user_id},
-		{$push: {"polls": poll}},
-		{safe: true, upsert: true, new: true},
-		function(error, data){
+	Poll.insert(poll, function(error, data){
 			//console.log(data)
 			res.send(data);
 		}
 	);
-});
+});*/
 
 /* GET single poll API */
 router.get('/api/polls/:id/:index', function(req, res, next){
@@ -229,15 +211,15 @@ router.get('/api/polls/:id/:index', function(req, res, next){
 	var index = req.params.index;
 	var poll_id = req.params.id;
 	//User.findOne({'polls[index]._id': req.params.id}, function(error, poll){
-	User.findOne({_id: user_id}, function(error, user){
+	Poll.findOne({user_id: user_id, index: index}, function(error, data){
 		if (error) {
 			return next(error);
 		} else {
 			return res.render('edit', {
 				_id: poll_id,
 				index: index,
-				poll_q: user.polls[index].poll_q,
-				poll_a: user.polls[index].poll_a //array
+				poll_q: data.poll_q,
+				poll_a: user.poll_a //array
 			});						
 		}
 	})
@@ -256,15 +238,13 @@ router.post('/api/polls/:id/:index', upload.array(), function(req, res, next) {
 		var value = 0;
 		answers.push({name: ans, value: value});
 	}
-	var data = {
-		_id: user_id,
-		poll_q: poll_q,
-		poll_a: answers,
-		index: index
-	}
-	User.findOneAndUpdate(
-		{_id: req.params.id, "polls.index": index},
-		{$set: {"polls.$": data}},
+	Poll.findOneAndUpdate(
+		{_id: req.params.id, index: index, user_id: user_id},
+		{$set: {
+			poll_q: poll_q,
+			poll_a: answers
+			}
+		},
 		//count: { $sum: 1 }
 		{safe: true, upsert: false},
 		function(error, data){
@@ -287,9 +267,9 @@ router.delete('/api/polls/:id/:index', function(req, res, next) {
 	if (!req.params.id) {
 		return next(new Error('No poll ID.'));
 	}
-	User.findOneAndUpdate(
-		{_id: user_id},
-		{$pull: {"polls": { index: index }}},
+	Poll.remove(
+		{_id: poll_id, index: index, user_id: user_id},
+		{justOne: true},
 		function(err, data){
 			if (err) {
 				return next(err);
@@ -311,15 +291,21 @@ router.post('/api/poll_a/:index', function(req, res){
 /* GET create page */
 router.get('/create', authorize, function(req, res, next){
 	var user_id = req.session.userId;
-	User.findOne({_id: user_id}, function(error, usr){
+	Poll.find({user_id: user_id}, function(error, docs){
 		if (error) {
 			return next(error);
 		} else {
-			return res.render('create', {
-				greet: usr.user,
-				result: 'Hello'+usr.user+'! Create your poll',
-				polls: usr.polls
-			});						
+			User.findOne({_id: user_id}, function(err, data) {
+				if (err) {
+					return next(err)
+				} else {
+					return res.render('create', {
+						greet: data.user,
+						result: 'Hello'+data.user+'! Create your poll',
+						polls: docs
+					});						
+				}				
+			})
 		}
 	})
 });
@@ -339,16 +325,14 @@ router.post('/create', authorize, upload.array(), function(req, res, next){
 	}
 	var index = req.body.index;
 	var data = {
-		_id: user_id,
+		user_id: user_id,
 		poll_q: poll_q,
 		poll_a: answers,
-		index: index
+		index: index,
+		voters: []
 	}
-	User.findOneAndUpdate(
-		{_id: user_id},
-		{$push: {"polls": data}},
-		{safe: true, upsert: true, new: true},
-		function(error, user){
+	Poll.insert(data,
+		function(error, docs){
 			if (error) {
 				return next(error);
 			}
@@ -365,11 +349,11 @@ router.post('/vote', upload.array(), hasVoted, function(req, res, next){
 	
 	var index = req.body.index;
 	var poll_q = req.body.poll_q;
-	User.find({_id: req.body.poll_id, 'polls.index': index}, function(err, data){
-		data = data[0]
+	Poll.findOne({_id: req.body.poll_id, index: index}, function(err, data){
+		//data = data[0]
 		var vals = [];
 		var names = [];
-		var answers = data.polls[index].poll_a;
+		var answers = data.poll_a;
 		for (var i = 0; i < answers.length; i++) {
 			vals.push(answers[i].value);
 			names.push(answers[i].name);
@@ -377,27 +361,33 @@ router.post('/vote', upload.array(), hasVoted, function(req, res, next){
 		var ans_ind = names.indexOf(req.body.checked);
 		var checked_val = vals[ans_ind];
 		checked_val++;
-		data.polls[index].poll_a[ans_ind].value = checked_val;
-		data.polls[index].voters.push({voter_id: user_ip});
+		data.poll_a[ans_ind].value = checked_val;
+		data.voters.push({voter_id: user_ip});
 		data.save(function(error){
 			if(error) {
 				console.log('error!')
 			}
-			console.log(data.polls[index].poll_a[ans_ind].value)
+			console.log(data.poll_a[ans_ind].value)
 			return res.redirect('/');
 		});
 	});
 });
 
 /* GET admin page */
-router.get('/admin', authorize, function(req, res, next) {
+router.get('/admin'/*, authorize*/, function(req, res, next) {
 	User.findOne({_id: req.session.userId}, function(err, user) {
 	  	//console.log(JSON.stringify(data[0].polls));
 		if (err) {
 			return next(err);
 		} else {
-			return res.render('admin', {
-				polls: user.polls
+			Poll.find({user_id: req.session.userId}, function(error, docs){
+				if (error) {
+					return next(error);
+				} else {
+					return res.render('admin', {
+						polls: docs
+					});
+				}
 			});
 		}
 	});
