@@ -4,7 +4,8 @@ var _ = require('underscore');
 var routes = require('./routes')
 var dotenv = require('dotenv');
 var bodyParser = require('body-parser');
-//var cookieParser = require('cookie-parser')
+var cookieParser = require('cookie-parser')
+var mongodb = require("mongodb");
 var mongoose = require('mongoose');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session); //let connect-mongo access session
@@ -13,9 +14,9 @@ var app = express();
 var index = require('./routes/index');
 dotenv.load();
 
-var uri = process.env.DEVDB || process.env.MONGODB_URI;
+var uri = process.env.MONGODB_URI;//process.env.DEVDB || ;
 
-mongoose.connect(uri);
+mongoose.connect(uri,{auth:{authdb:"heroku_t452bq5j"}});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
@@ -26,7 +27,7 @@ db.on('error', console.error.bind(console, 'connection error:'));
 
 //app.use(cookieParser());
 // use sessions for tracking logins
-app.use(session({
+/*app.use(session({
 	secret: 'fccftw',
 	resave: true,
 	saveUninitialized: false,
@@ -34,14 +35,8 @@ app.use(session({
 		mongooseConnection: db
 	})
 }));
-
-// make user ID available in templates
-app.use(function (req, res, next) {
-  	res.locals.currentUser = req.session.userId;
-	next();
-});
-
-/*var sess = {
+*/
+var sess = {
   	secret: 'keyboard cat',
 	resave: false,
 	saveUninitialized: false,
@@ -53,12 +48,18 @@ app.use(function (req, res, next) {
 }
 
 if (app.get('env') === 'production') {
-  app.set('trust proxy', 1) // trust first proxy
-  sess.cookie.secure = true // serve secure cookies
+	app.set('trust proxy', 1) // trust first proxy
+	sess.cookie.secure = true // serve secure cookies
 }
 
 app.use(session(sess))
-*/
+
+// make user ID available in templates
+app.use(function (req, res, next) {
+  	res.locals.currentUser = req.session.userId;
+	next();
+});
+
 app.use(express.static(__dirname + '/public'));
 
 app.set('view engine', 'pug');
