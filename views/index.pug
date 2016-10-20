@@ -5,11 +5,15 @@ block content
 	- var pollString = JSON.stringify(polls)
 	input(type='hidden', class='poll-data-json', value= pollString )
 	if (polls.length === 0)
-		h3 There's no published content yet.
-		a(href="/login") Log in 
-		h4 or
-		a(href="/signup") sign up 
-		h4 to create a poll.
+		if (currentUser)
+			h3 You have no polls
+			a(href="/create") Create one!
+		else
+			h3 There's no published content yet.
+			a(href="/login") Log in 
+			h4 or
+			a(href="/signup") sign up 
+			h4 to create a poll.
 	else
 		div.container-fluid
 			each poll, index in polls
@@ -18,8 +22,9 @@ block content
 						a.panel-title #{poll.poll_q}
 						 					
 					div.panel-body(id="pollDiv", class="pollDiv")
-						include poll.pug
+						
 						div#poll.col-xs-12.col-md-6
+							include poll.pug
 							+polldiv(poll)
 						svg#chart.col-xs-12.col-md-6(width = '400', height = '300', class='vis'+''+index+'')
 					

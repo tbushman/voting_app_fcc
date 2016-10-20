@@ -9,9 +9,9 @@ var mongoose = require('mongoose');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session); //let connect-mongo access session
 var User = require('./models/user');
-dotenv.load();
-
+var app = express();
 var index = require('./routes/index');
+dotenv.load();
 
 var uri = process.env.DEVDB || process.env.MONGODB_URI;
 
@@ -19,10 +19,7 @@ mongoose.connect(uri);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
-var app = express();
 
-app.set('view engine', 'pug');
-app.set('views', path.join(__dirname, 'views'));
 
 //app.set('trust proxy', true);
 
@@ -37,6 +34,16 @@ app.use(session({
 		mongooseConnection: db
 	})
 }));
+
+// make user ID available in templates
+app.use(function (req, res, next) {
+  	res.locals.currentUser = req.session.userId;
+	/*if (req.session.userId) {
+	    res.locals.admin = true;
+	}*/
+	next();
+});
+
 /*var sess = {
   	secret: 'keyboard cat',
 	resave: false,
@@ -55,29 +62,24 @@ if (app.get('env') === 'production') {
 
 app.use(session(sess))
 */
+app.use(express.static(__dirname + '/public'));
+
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
 app.locals.appTitle = "FCC Voting app";
 
-// make user ID available in templates
-app.use(function (req, res, next) {
-  	res.locals.currentUser = req.session.userId;
-	/*if (req.session.userId) {
-	    res.locals.admin = true;
-	}*/
-	next();
-});
 
 app.use(bodyParser.json());
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 app.use(urlencodedParser);
 
-app.use(express.static(__dirname + '/public'));
-
 //routes
 app.use('/', index);
 
-app.all('*', function(req, res) {
+/*app.all('*', function(req, res) {
 	res.send(404);
-})
+})*/
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -4,10 +4,8 @@ block page
 block content
 	div.admin
 		if (polls.length === 0 )
-			p
-				| Nothing to display. Add a new
-				a(href="/create") poll
-				|.
+			h3 Nothing to display. Add a new&nbsp
+				a(href="/create") poll.
 		else
 			table.table.table-stripped
 				thead
@@ -25,26 +23,24 @@ block content
 										span.glyphicon(class="glyphicon-edit", title="Edit")
 								td= poll.poll_q
 	script(type="text/javascript").
-		$(document).ready(function(){
-			function findTr(event) {
-				var target = event.srcElement || event.target;
-				var $target = $(target);
-				var $tr =  $target.parents('tr');
-				return $tr;
-			};
-			$(document).on('click', '.remove', function(event) {
-				var $tr = findTr(event);
-				var incoming_id = $tr.attr('data-id'); 
-				var index = incoming_id.split('@').pop();
-				var id = incoming_id.split('@')[0];
-				$.ajax({
-					url: '/api/polls/' + id + '/' + index,
-					type: 'DELETE',
-					success: function(data, status, xhr) {
-						$('.alert').addClass('hidden');
-						$tr.remove();
-					}
-				});
+		function findTr(event) {
+			var target = event.srcElement || event.target;
+			var $target = $(target);
+			var $tr =  $target.parents('tr');
+			return $tr;
+		};
+		$(document).on('click', '.remove', function(event) {
+			var $tr = findTr(event);
+			var incoming_id = $tr.attr('data-id'); 
+			var index = incoming_id.split('@').pop();
+			var id = incoming_id.split('@')[0];
+			$.ajax({
+				url: '/api/polls/' + id + '/' + index,
+				type: 'DELETE',
+				success: function(data, status, xhr) {
+					$('.alert').addClass('hidden');
+					$tr.remove();
+				}
 			});
 		});
 		
