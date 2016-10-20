@@ -180,7 +180,8 @@ router.get('/',  function(req, res, next){
 });
 
 
-/* GET poll page */
+/* GET poll page */ //Twitter link
+
 router.get('/polls/:id/:index', function(req, res, next) {
 	var index = req.params.index;
   	if (!req.params.id) {
@@ -191,9 +192,10 @@ router.get('/polls/:id/:index', function(req, res, next) {
 		if (error) {
 			return next(error);
 		} else {
-			return res.render('poll', {
+			return res.render('vote', {
 				poll_id: poll_id,
 				index: index,
+				twitter: user.polls[index].twitter,
 				poll_q: user.polls[index].poll_q,
 				poll_a: user.polls[index].poll_a //array
 			});						
@@ -202,15 +204,6 @@ router.get('/polls/:id/:index', function(req, res, next) {
 });
 
 router.all('/api', authorize);
-
-
-/* GET users API */
-router.get('/api/users', function(req, res, next) {
-	User.list(function(error, users) {
-    	if (error) return next(error);
-    	res.send({users: users});
-  	});
-});
 
 /* GET polls API */
 router.get('/api/polls', function(req, res, next) {
@@ -248,7 +241,7 @@ router.post('/api/polls', function(req, res, next) { //see admin.pug
 	);
 });
 
-/* GET single poll API */
+/* GET single poll API */ //for edits in admin mode
 router.get('/api/polls/:id/:index', function(req, res, next){
 	var user_id = req.session.userId;
 	var index = req.params.index;
@@ -379,11 +372,15 @@ router.post('/create', authorize, upload.array(), function(req, res, next){
 		answers.push({name: ans, value: value});
 	}
 	var index = req.body.index;
+	var url = req.protocol + '://'+ req.get('host') + '/polls/'+ user_id + '/' + index + '';
+	var twitter = 'http://twitter.com/share?text=An%20Awesome%20Poll&url='+url;
+	
 	var data = {
 		poll_id: user_id,
 		poll_q: poll_q,
 		poll_a: answers,
-		index: index
+		index: index,
+		twitter: twitter
 	}
 	User.findOneAndUpdate(
 		{_id: user_id},
@@ -399,6 +396,7 @@ router.post('/create', authorize, upload.array(), function(req, res, next){
 	return res.redirect('/');					
 	
 });
+
 
 /* POST vote */
 router.post('/vote', upload.array(), hasVoted, function(req, res, next){

@@ -11,7 +11,13 @@ mixin polldiv(poll)
 							input(type="radio", class="radio", value=""+val.name+"") 
 							| #{val.name}
 				
-		button.btn.btn-primary(type="submit") Vote
+		div.row.submit
+			div.col-xs-9.col-md-10
+				button.btn.btn-primary.btn-block(type="submit") Vote
+			div.col-xs-3.col-md-2
+				a.btn.btn-info.btn-block(role="button", href=""+poll.twitter+"", target="_blank") 
+					i.fa.fa-twitter
+					
 	script.
 		$(document).ready(function(){
 			$('input.radio').parent().click(function(event){

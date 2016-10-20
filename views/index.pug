@@ -24,7 +24,7 @@ block content
 					div.panel-body(id="pollDiv", class="pollDiv")
 						
 						div#poll.col-xs-12.col-md-6
-							include poll.pug
+							include includes/poll.pug
 							+polldiv(poll)
 						svg#chart.col-xs-12.col-md-6(width = '400', height = '300', class='vis'+''+index+'')
 					
@@ -44,7 +44,7 @@ block content
 			var viz = d3.select('.vis'+i);
 			var	WIDTH = 400;
 			var	HEIGHT = 300;
-			var MARGINS = {top: 20, right: 20, bottom: 50, left: 50};
+			var MARGINS = {top: 50, right: 20, bottom: 50, left: 20};
 			var xRange = d3.scale.ordinal().rangeRoundBands([MARGINS.left, WIDTH - MARGINS.right], .1).domain(data.map(function (d) {return d.name;}));
 			var yRange = d3.scale.linear().range([(HEIGHT - MARGINS.bottom), 0]).domain([0, d3.max(data, function (d) {return d.value;})]);
 			var xAxis = d3.svg.axis().scale(xRange).orient('bottom');

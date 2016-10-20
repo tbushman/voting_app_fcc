@@ -1,0 +1,29 @@
+extends layout
+block content
+	div= error
+	div.col-xs-12.col-md-6
+		h4= poll_q
+		form(enctype="multipart/form-data", method="POST", action="/vote")
+			input(type="hidden", name="index", value=""+index+"")
+			input(type="hidden", name="poll_id", value=""+poll_id+"")
+			ul.list-group
+				each val, index in poll_a
+					li.list-group-item
+						div.radio
+							label
+								input(type="radio", class="radio", value=""+val.name+"") 
+								| #{val.name}
+
+			div.row.submit
+				div.col-xs-9.col-md-10
+					button.btn.btn-primary.btn-block(type="submit") Vote
+				div.col-xs-3.col-md-2
+					a.btn.btn-info.btn-block(role="button", href=""+twitter+"", target="_blank") 
+						i.fa.fa-twitter
+	script.
+		$(document).ready(function(){
+			$('input.radio').parent().click(function(event){
+				$('input.radio').attr('name', 'un-checked');
+				$(event.target).attr('name', 'checked');
+			});
+		});

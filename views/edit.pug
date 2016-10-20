@@ -4,7 +4,7 @@ block page
 block content
 	div= error
 	div.col-xs-12.col-md-6
-		h4 Edit your poll
+		h3 Edit your poll
 		form(action="/api/polls/"+poll_id+"/"+index+"", method="POST", role="form")
 			div.form-group
 				label(for="poll_q") Question:

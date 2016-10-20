@@ -3,6 +3,4 @@ node_modules
 backup
 data
 mongod
-d3-node
 backup.zip
-d3-node.js

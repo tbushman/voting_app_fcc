@@ -22,6 +22,9 @@ var UserSchema = new mongoose.Schema({
 			},
 			index: {
 				type: Number
+			},
+			twitter: {
+				type: String
 			},	
 			poll_q: {
 				type: String,

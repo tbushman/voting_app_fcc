@@ -38,9 +38,6 @@ app.use(session({
 // make user ID available in templates
 app.use(function (req, res, next) {
   	res.locals.currentUser = req.session.userId;
-	/*if (req.session.userId) {
-	    res.locals.admin = true;
-	}*/
 	next();
 });
 

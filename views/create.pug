@@ -6,7 +6,7 @@ block content
 	input(type='hidden', class='poll-data-json', value= pollString )
 	div= error
 	div.col-xs-12.col-md-6
-		h4 Hello, #{greet}! Create a poll.
+		h3 Hello, #{greet}! Create a poll.
 		form(action="/create", method="POST", role="form")
 			input(name="index", type="hidden", id="index")
 			div.form-group
