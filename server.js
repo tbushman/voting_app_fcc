@@ -5,7 +5,7 @@ var routes = require('./routes')
 var dotenv = require('dotenv');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
-var mongodb = require("mongodb");
+//var mongodb = require("mongodb");
 var mongoose = require('mongoose');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session); //let connect-mongo access session
@@ -15,11 +15,9 @@ var index = require('./routes/index');
 dotenv.load();
 
 //var uri = process.env.MONGODB_URI;//process.env.DEVDB || ;
-var uri =
-    process.env.MONGOLAB_URI ||
-    process.env.DEVDB;
+var uri = process.env.MONGOLAB_URI || process.env.DEVDB;
 
-mongoose.connect(uri/*,{auth:{authdb:"heroku_t452bq5j"}}*/);
+mongoose.connect(uri, {authMechanism: 'ScramSHA1'});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
@@ -43,16 +41,16 @@ var sess = {
   	secret: 'keyboard cat',
 	resave: false,
 	saveUninitialized: false,
-	//cookie: {},
+	cookie: {},
 	store: new MongoStore({
 		mongooseConnection: db
 	})
   
 }
-//app.use(cookieParser(sess.secret));
+app.use(cookieParser(sess.secret));
 if (app.get('env') === 'production') {
 	app.set('trust proxy', 1) // trust first proxy
-	//sess.cookie.secure = true // serve secure cookies
+	sess.cookie.secure = true // serve secure cookies
 }
 
 app.use(session(sess))

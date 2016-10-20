@@ -44,7 +44,7 @@ var UserSchema = new mongoose.Schema({
 			]			
 		}
 	]
-}/*, { collection: 'fcc_voters' }*/);
+}, { collection: 'fcc_voters' });
 // authenticate input against database documents
 UserSchema.statics.authenticate = function(user, pass, callback) {
 	User.findOne({ user: user })
